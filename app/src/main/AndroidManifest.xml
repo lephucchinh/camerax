@@ -9,9 +9,7 @@
     <!-- Ghi âm khi quay video -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
-    <!-- Lưu ảnh/video xuống bộ nhớ (nếu bạn muốn lưu ra ngoài cacheDir) -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"/> <!-- từ Android 10 trở đi dùng MediaStore nên quyền này ít dùng -->
+
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
 

@@ -6,13 +6,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <View
+    <LinearLayout
         android:id="@+id/bgTool"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="@color/white"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="@color/black"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" >
+
+    </LinearLayout>
 
     <!-- CameraView -->
     <com.otaliastudios.cameraview.CameraView
