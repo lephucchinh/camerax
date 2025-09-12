@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/bgTool"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- CameraView -->
+    <com.otaliastudios.cameraview.CameraView
+        android:id="@+id/camera"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:keepScreenOn="true"
+        app:cameraAudio="on"
+        app:cameraEngine="camera2"
+        app:cameraExperimental="true"
+        app:cameraFacing="back"
+        app:cameraFlash="auto"
+        app:cameraGestureLongTap="none"
+        app:cameraGesturePinch="zoom"
+        app:cameraGestureScrollHorizontal="filterControl1"
+        app:cameraGestureScrollVertical="exposureCorrection"
+        app:cameraGrid="off"
+        app:cameraMode="picture"
+        app:cameraPlaySounds="true"
+        app:cameraPreview="glSurface"
+        app:layout_constraintBottom_toTopOf="@+id/ads"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bgTool" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="@+id/camera"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/ivGallery"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_photo"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/ivChangeMode"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_video_recording" />
+
+        <ImageView
+            android:id="@+id/ivTakePhoto"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_take_photo" />
+
+        <ImageView
+            android:id="@+id/ivChangeCamera"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_change_camera"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/ivSetting"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_setting"
+            app:tint="@color/white" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivPhotoPreview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="@+id/camera"
+        app:layout_constraintEnd_toEndOf="@+id/camera"
+        app:layout_constraintStart_toStartOf="@+id/camera"
+        app:layout_constraintTop_toTopOf="@+id/camera" />
+
+    <ImageView
+        android:id="@+id/icBack"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="20dp"
+        android:src="@drawable/ic_back"
+        app:layout_constraintBottom_toBottomOf="@+id/ivPhotoPreview"
+        app:layout_constraintStart_toStartOf="@+id/ivPhotoPreview" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/grPhotoPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        app:constraint_referenced_ids="icBack,ivPhotoPreview" />
+
+    <View
+        android:id="@+id/ads"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
