@@ -1,5 +1,6 @@
 package com.example.camerax
 
+import android.R.id.message
 import android.content.Intent
 import android.graphics.PointF
 import android.os.Bundle
@@ -10,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.camerax.databinding.ActivityMainBinding
 import com.example.camerax.utils.SaveDataCamera
 import com.otaliastudios.cameraview.CameraException
@@ -20,6 +22,8 @@ import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.VideoResult
 import com.otaliastudios.cameraview.controls.Facing
 import com.otaliastudios.cameraview.controls.Mode
+import com.otaliastudios.cameraview.controls.Preview
+import com.otaliastudios.cameraview.filter.Filters
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -29,6 +33,12 @@ class MainActivity : AppCompatActivity() {
 
     private var isRecording = false
 
+    private var currentFilter = 0
+    private val allFilters = Filters.values()
+
+    private lateinit var filterAdapter: FilterAdapter
+
+
     val saveDataCamera = lazy { SaveDataCamera() }
 
 
@@ -37,8 +47,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupObserver()
-        setupListener()
-        setupUI()
+        setupUI()       // <- init filterAdapter ở đây trước
+        setupListener() // <- sau đó mới gán cho RecyclerView
         setupData()
     }
 
@@ -46,6 +56,10 @@ class MainActivity : AppCompatActivity() {
         CameraLogger.setLogLevel(CameraLogger.LEVEL_VERBOSE)
         binding.camera.setLifecycleOwner(this)
         binding.camera.addCameraListener(Listener())
+
+        filterAdapter = FilterAdapter(allFilters) { selectedFilter ->
+            changeCurrentFilter(selectedFilter)
+        }
     }
 
     private fun setupData() {}
@@ -99,8 +113,30 @@ class MainActivity : AppCompatActivity() {
             icBack.setOnClickListener {
                 grPhotoPreview.visibility = View.GONE
             }
+
+            rcvFilter.apply {
+                layoutManager = LinearLayoutManager(
+                    this@MainActivity,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
+                adapter = filterAdapter
+            }
         }
     }
+
+    private fun changeCurrentFilter(currentFilter : Int) {
+        binding.apply {
+            if (camera.preview != Preview.GL_SURFACE) return
+            val filter = allFilters[currentFilter]
+
+            // Normal behavior:
+            camera.filter = filter.newInstance()
+        }
+
+
+    }
+
 
     private fun setupObserver() {}
 
@@ -145,6 +181,7 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
         }
+
 
 
         override fun onVideoRecordingStart() {
