@@ -1,12 +1,10 @@
-package com.example.camerax
+package com.example.camerax.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.example.camerax.R
 import com.example.camerax.databinding.LayoutFilterBinding
 import com.otaliastudios.cameraview.filter.Filters
 

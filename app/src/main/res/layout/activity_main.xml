@@ -3,18 +3,63 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:id="@+id/bgTool"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:orientation="horizontal"
         android:background="@color/black"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" >
+        app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:id="@+id/ivFinish"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_back" />
+
+        <ImageView
+            android:id="@+id/ivFlash"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_flash_off" />
+
+        <ImageView
+            android:id="@+id/ivCrop"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_crop" />
+
+        <ImageView
+            android:id="@+id/ivClock"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_clock" />
+
+        <ImageView
+            android:id="@+id/ivFilter"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_filter" />
+
+        <ImageView
+            android:id="@+id/ivOptionMore"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_menu" />
     </LinearLayout>
 
     <!-- CameraView -->
@@ -40,6 +85,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bgTool" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcvTools"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_tools"
+        android:orientation="horizontal"
+        tools:itemCount="4"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="gone"
+        tools:listitem="@layout/layout_menu"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/camera" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -102,7 +165,7 @@
         app:layout_constraintTop_toTopOf="@+id/camera" />
 
     <ImageView
-        android:id="@+id/icBack"
+        android:id="@+id/ivBack"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="20dp"
@@ -116,7 +179,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="invisible"
-        app:constraint_referenced_ids="icBack,ivPhotoPreview" />
+        app:constraint_referenced_ids="ivBack,ivPhotoPreview" />
 
     <View
         android:id="@+id/ads"
@@ -129,13 +192,14 @@
         android:id="@+id/rcvFilter"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:orientation="horizontal"
-        tools:itemCount="10"
-        tools:listitem="@layout/layout_filter"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="@+id/ads"
         app:layout_constraintEnd_toEndOf="@+id/ads"
         app:layout_constraintStart_toStartOf="@+id/ads"
-        app:layout_constraintTop_toTopOf="@+id/ads" />
+        app:layout_constraintTop_toTopOf="@+id/ads"
+        tools:itemCount="10"
+        tools:listitem="@layout/layout_filter" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

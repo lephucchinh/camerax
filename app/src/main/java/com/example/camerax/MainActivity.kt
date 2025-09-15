@@ -1,20 +1,29 @@
 package com.example.camerax
 
-import android.R.id.message
-import android.content.Intent
 import android.graphics.PointF
+import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.addCallback
 
-import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.camerax.adapter.FilterAdapter
+import com.example.camerax.adapter.FlashType
+import com.example.camerax.adapter.ToolsAdapter
+import com.example.camerax.adapter.TypeItems
+import com.example.camerax.adapter.getClockItems
+import com.example.camerax.adapter.getCropItems
+import com.example.camerax.adapter.getFlashItems
+import com.example.camerax.adapter.getMenuItems
 import com.example.camerax.databinding.ActivityMainBinding
 import com.example.camerax.utils.SaveDataCamera
+import com.example.camerax.utils.setSafeClickListener
 import com.otaliastudios.cameraview.CameraException
 import com.otaliastudios.cameraview.CameraListener
 import com.otaliastudios.cameraview.CameraLogger
@@ -22,9 +31,11 @@ import com.otaliastudios.cameraview.CameraOptions
 import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.VideoResult
 import com.otaliastudios.cameraview.controls.Facing
+import com.otaliastudios.cameraview.controls.Flash
 import com.otaliastudios.cameraview.controls.Mode
 import com.otaliastudios.cameraview.controls.Preview
 import com.otaliastudios.cameraview.filter.Filters
+import com.otaliastudios.cameraview.filter.NoFilter
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -39,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var filterAdapter: FilterAdapter
 
+    private lateinit var toolsAdapter: ToolsAdapter
 
     val saveDataCamera = lazy { SaveDataCamera() }
 
@@ -59,17 +71,74 @@ class MainActivity : AppCompatActivity() {
         binding.camera.setLifecycleOwner(this)
         binding.camera.addCameraListener(Listener())
 
+
+        toolsAdapter = ToolsAdapter { item ->
+            when (item) {
+                is TypeItems.FlashItem -> {
+                    when (item.type) {
+                        FlashType.OFF -> {
+                            binding.ivFlash.setImageResource(R.drawable.ic_flash_off)
+                            binding.camera.flash = Flash.OFF
+                        }
+
+                        FlashType.ON -> {
+                            binding.ivFlash.setImageResource(R.drawable.ic_flash)
+                            binding.camera.flash = Flash.ON
+
+                        }
+
+                        FlashType.AUTO -> {
+                            binding.ivFlash.setImageResource(R.drawable.ic_flash_auto)
+                            binding.camera.flash = Flash.AUTO
+
+                        }
+                    }
+                    Toast.makeText(this, "Flash: ${item.type}", Toast.LENGTH_SHORT).show()
+                }
+
+                is TypeItems.CropItem -> {
+
+                    Toast.makeText(this, "Crop: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+
+                is TypeItems.ClockItem -> {
+
+                    Toast.makeText(this, "Clock: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+
+                is TypeItems.MenuItem -> {
+
+                    Toast.makeText(this, "Menu: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+
+        binding.rcvTools.apply {
+            adapter = toolsAdapter
+        }
+
         filterAdapter = FilterAdapter(allFilters) { selectedFilter ->
             changeCurrentFilter(selectedFilter)
         }
+
+        changeColorIvFilter()
     }
+
 
     private fun setupData() {}
     private fun setupListener() {
+
+        onBackPressedDispatcher.addCallback(this) {
+            this@MainActivity.finish()
+        }
+
         binding.apply {
+
             // đổi camera
-            ivChangeCamera.setOnClickListener {
+            ivChangeCamera.setSafeClickListener {
                 val current = camera.facing
+                stopRecordingIfNeeded()
                 camera.facing = if (current == Facing.BACK) {
                     Facing.FRONT
                 } else {
@@ -78,28 +147,32 @@ class MainActivity : AppCompatActivity() {
             }
 
             // Chụp ảnh hoặc quay video
-            ivTakePhoto.setOnClickListener {
+            ivTakePhoto.setSafeClickListener {
                 if (camera.mode == Mode.PICTURE) {
-                    // Chụp ảnh
-                    camera.takePicture()
+                    // Nếu đang có filter (khác NONE) thì chụp snapshot để có filter
+                    if (camera.filter !is NoFilter) {
+                        camera.takePictureSnapshot()
+                    } else {
+                        camera.takePicture()
+                    }
                 } else {
                     if (!isRecording) {
-                        // Bắt đầu quay
                         val videoFile = File(cacheDir, "video_${System.currentTimeMillis()}.mp4")
-                        camera.takeVideo(videoFile)
-                        isRecording = true
-                        ivTakePhoto.setImageResource(R.drawable.ic_video_stop) // đổi icon sang nút Stop
+                        if (camera.filter is NoFilter) {
+                            camera.takeVideo(videoFile)
+                        } else {
+                            camera.takeVideoSnapshot(videoFile)
+                        }
                     } else {
-                        // Dừng quay
                         camera.stopVideo()
-                        isRecording = false
-                        ivTakePhoto.setImageResource(R.drawable.ic_video_recording) // đổi icon lại
                     }
                 }
             }
 
+
             // đổi mode
-            ivChangeMode.setOnClickListener {
+            ivChangeMode.setSafeClickListener {
+                if (isRecording) return@setSafeClickListener
                 val current = camera.mode
                 camera.mode = if (current == Mode.PICTURE) {
                     ivTakePhoto.setImageResource(R.drawable.ic_video_recording)
@@ -110,10 +183,12 @@ class MainActivity : AppCompatActivity() {
                     ivChangeMode.setImageResource(R.drawable.ic_video_recording)
                     Mode.PICTURE
                 }
+
             }
 
-            icBack.setOnClickListener {
+            ivBack.setSafeClickListener {
                 grPhotoPreview.visibility = View.GONE
+                stopRecordingIfNeeded()
             }
 
             rcvFilter.apply {
@@ -124,10 +199,73 @@ class MainActivity : AppCompatActivity() {
                 )
                 adapter = filterAdapter
             }
+
+            ivFinish.setOnClickListener {
+                this@MainActivity.onBackPressedDispatcher.onBackPressed()
+            }
+
+            ivFlash.setOnClickListener {
+                if (toolsAdapter.getDefaultItems() is TypeItems.FlashItem) {
+                    toolsAdapter.clearData()
+                    rcvTools.isVisible = false
+                } else {
+                    rcvTools.isVisible = true
+                    toolsAdapter.setDefaultItems(getFlashItems())
+                }
+            }
+
+            ivCrop.setOnClickListener {
+                if (toolsAdapter.getDefaultItems() is TypeItems.CropItem) {
+                    toolsAdapter.clearData()
+                    rcvTools.isVisible = false
+                } else {
+                    rcvTools.isVisible = true
+                    toolsAdapter.setDefaultItems(getCropItems())
+                }
+            }
+
+            ivClock.setOnClickListener {
+                if (toolsAdapter.getDefaultItems() is TypeItems.ClockItem) {
+                    toolsAdapter.clearData()
+                    rcvTools.isVisible = false
+                } else {
+                    rcvTools.isVisible = true
+                    toolsAdapter.setDefaultItems(getClockItems())
+                }
+            }
+
+            ivFilter.setOnClickListener {
+                if (rcvFilter.isVisible) {
+                    rcvFilter.isVisible = false
+                } else {
+                    rcvFilter.isVisible = true
+                }
+                changeColorIvFilter()
+            }
+
+            ivOptionMore.setOnClickListener {
+                if (toolsAdapter.getDefaultItems() is TypeItems.MenuItem) {
+                    toolsAdapter.clearData()
+                    rcvTools.isVisible = false
+                } else {
+                    rcvTools.isVisible = true
+                    toolsAdapter.setDefaultItems(getMenuItems())
+                }
+            }
         }
     }
 
-    private fun changeCurrentFilter(currentFilter : Int) {
+    private fun changeColorIvFilter() {
+        binding.ivFilter.setColorFilter(
+            ContextCompat.getColor(
+                this@MainActivity,
+                if (binding.rcvFilter.isVisible) R.color.blue else R.color.white
+            ),
+            PorterDuff.Mode.SRC_IN
+        )
+    }
+
+    private fun changeCurrentFilter(currentFilter: Int) {
         binding.apply {
             if (camera.preview != Preview.GL_SURFACE) return
             val filter = allFilters[currentFilter]
@@ -142,9 +280,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupObserver() {}
 
+
+    private fun stopRecordingIfNeeded() {
+        if (isRecording) {
+            binding.camera.stopVideo()
+            binding.ivTakePhoto.setImageResource(R.drawable.ic_video_recording)
+            isRecording = false
+        }
+    }
+
     private inner class Listener : CameraListener() {
         override fun onCameraOpened(options: CameraOptions) {
-
         }
 
         override fun onCameraError(exception: CameraException) {
@@ -167,7 +313,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     Toast.makeText(this@MainActivity, "Photo saved!", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(this@MainActivity, "Save photo failed!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Save photo failed!", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -185,14 +332,16 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
         override fun onVideoRecordingStart() {
             super.onVideoRecordingStart()
+            binding.ivTakePhoto.setImageResource(R.drawable.ic_video_stop)
+            isRecording = true
         }
 
         override fun onVideoRecordingEnd() {
             super.onVideoRecordingEnd()
-
+            binding.ivTakePhoto.setImageResource(R.drawable.ic_video_recording)
+            isRecording = false
         }
 
         override fun onExposureCorrectionChanged(

@@ -4,7 +4,7 @@
         <item name="windowActionBar">true</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
 
     </style>
 
