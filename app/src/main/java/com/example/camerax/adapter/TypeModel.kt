@@ -11,13 +11,21 @@ sealed class TypeItems : Parcelable {
         TypeItems()
 
     @Parcelize
-    data class CropItem(val title: String, val type: String) : TypeItems()
+    data class CropItem(val title: String, val type: CropType) : TypeItems()
 
     @Parcelize
-    data class ClockItem(val title: String, val type: String) : TypeItems()
+    data class ClockItem(val title: String, val type: ClockType) : TypeItems()
 
     @Parcelize
-    data class MenuItem(@DrawableRes val image: Int, val title: String, val type: String) :
+    data class MenuItem(@DrawableRes val image: Int, val title: String, val type: MenuType) :
+        TypeItems()
+
+    @Parcelize
+    data class GridItem(val title: String, val type: GridType) :
+        TypeItems()
+
+    @Parcelize
+    data class FocusItem(@DrawableRes val image: Int, val type: FocusType) :
         TypeItems()
 }
 
@@ -39,6 +47,13 @@ enum class MenuType {
     GRID, FOCUS, EXPOSURE
 }
 
+enum class GridType {
+    NONE, GIRD_3X3, GRID_PHI_3X3, GRID_4X4, CROSS, GR_1, GR_2, GR_3, GR_4, DIAGONAL, TRIANGLE_1, TRIANGLE_2
+}
+
+enum class FocusType {
+    AUTO, MACRO,INFINITY,CONTINUOUS
+}
 fun getFlashItems(): List<TypeItems> {
     return listOf(
         TypeItems.FlashItem(com.example.camerax.R.drawable.ic_flash_off, FlashType.OFF),
@@ -49,29 +64,55 @@ fun getFlashItems(): List<TypeItems> {
 
 fun getCropItems(): List<TypeItems> {
     return listOf(
-        TypeItems.CropItem("1:1", CropType.CROP_1_1.name),
-        TypeItems.CropItem("4:3", CropType.CROP_4_3.name),
-        TypeItems.CropItem("16:9", CropType.CROP_16_9.name),
+        TypeItems.CropItem("1:1", CropType.CROP_1_1),
+        TypeItems.CropItem("4:3", CropType.CROP_4_3),
+        TypeItems.CropItem("16:9", CropType.CROP_16_9),
     )
 }
 
 fun getClockItems(): List<TypeItems> {
     return listOf(
-        TypeItems.ClockItem("Off", ClockType.OFF.name),
-        TypeItems.ClockItem("3s", ClockType.TIME_3S.name),
-        TypeItems.ClockItem("5s", ClockType.TIME_5S.name),
-        TypeItems.ClockItem("9s", ClockType.TIME_9S.name)
+        TypeItems.ClockItem("Off", ClockType.OFF),
+        TypeItems.ClockItem("3s", ClockType.TIME_3S),
+        TypeItems.ClockItem("5s", ClockType.TIME_5S),
+        TypeItems.ClockItem("9s", ClockType.TIME_9S)
     )
 }
 
 fun getMenuItems(): List<TypeItems> {
     return listOf(
-        TypeItems.MenuItem(com.example.camerax.R.drawable.ic_grid, "Grid", MenuType.GRID.name),
-        TypeItems.MenuItem(com.example.camerax.R.drawable.ic_focus, "Focus", MenuType.FOCUS.name),
+        TypeItems.MenuItem(com.example.camerax.R.drawable.ic_grid, "Grid", MenuType.GRID),
+        TypeItems.MenuItem(com.example.camerax.R.drawable.ic_focus, "Focus", MenuType.FOCUS),
         TypeItems.MenuItem(
             com.example.camerax.R.drawable.ic_exposure,
             "Exposure",
-            MenuType.EXPOSURE.name
+            MenuType.EXPOSURE
         )
+    )
+}
+
+fun getGridItems(): List<TypeItems> {
+    return listOf(
+        TypeItems.GridItem("None", GridType.NONE),
+        TypeItems.GridItem("3x3", GridType.GIRD_3X3),
+        TypeItems.GridItem("Phi 3x3", GridType.GRID_PHI_3X3),
+        TypeItems.GridItem("4x4", GridType.GRID_4X4),
+        TypeItems.GridItem("Cross", GridType.CROSS),
+        TypeItems.GridItem("GR 1", GridType.GR_1),
+        TypeItems.GridItem("GR 2", GridType.GR_2),
+        TypeItems.GridItem("GR 3", GridType.GR_3),
+        TypeItems.GridItem("GR 4", GridType.GR_4),
+        TypeItems.GridItem("Diagonal", GridType.DIAGONAL),
+        TypeItems.GridItem("Triangle 1", GridType.TRIANGLE_1),
+        TypeItems.GridItem("Triangle 2", GridType.TRIANGLE_2)
+    )
+}
+
+fun getFocusItems(): List<TypeItems> {
+    return listOf(
+        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_auto, FocusType.AUTO),
+        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_macro, FocusType.MACRO),
+        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_infinify, FocusType.INFINITY),
+        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_continuos, FocusType.CONTINUOUS)
     )
 }

@@ -2,7 +2,9 @@ package com.example.camerax
 
 import android.graphics.PointF
 import android.graphics.PorterDuff
+import android.graphics.Rect
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -13,6 +15,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.camerax.adapter.CropType
 import com.example.camerax.adapter.FilterAdapter
 import com.example.camerax.adapter.FlashType
 import com.example.camerax.adapter.ToolsAdapter
@@ -36,6 +39,9 @@ import com.otaliastudios.cameraview.controls.Mode
 import com.otaliastudios.cameraview.controls.Preview
 import com.otaliastudios.cameraview.filter.Filters
 import com.otaliastudios.cameraview.filter.NoFilter
+import com.otaliastudios.cameraview.size.AspectRatio
+import com.otaliastudios.cameraview.size.SizeSelector
+import com.otaliastudios.cameraview.size.SizeSelectors
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -75,40 +81,60 @@ class MainActivity : AppCompatActivity() {
         toolsAdapter = ToolsAdapter { item ->
             when (item) {
                 is TypeItems.FlashItem -> {
-                    when (item.type) {
+                    val flashMode = when (item.type) {
                         FlashType.OFF -> {
                             binding.ivFlash.setImageResource(R.drawable.ic_flash_off)
-                            binding.camera.flash = Flash.OFF
+                            Flash.OFF
                         }
 
                         FlashType.ON -> {
                             binding.ivFlash.setImageResource(R.drawable.ic_flash)
-                            binding.camera.flash = Flash.ON
+                            Flash.ON
 
                         }
 
                         FlashType.AUTO -> {
                             binding.ivFlash.setImageResource(R.drawable.ic_flash_auto)
-                            binding.camera.flash = Flash.AUTO
+                            Flash.AUTO
 
                         }
                     }
-                    Toast.makeText(this, "Flash: ${item.type}", Toast.LENGTH_SHORT).show()
+                    binding.camera.flash = flashMode
+
                 }
 
                 is TypeItems.CropItem -> {
+//                    val ratio = when (item.type) {
+//                        CropType.CROP_1_1 -> AspectRatio.of(1, 1)
+//                        CropType.CROP_4_3 -> AspectRatio.of(4, 3)
+//                        CropType.CROP_16_9 -> AspectRatio.of(16, 9)
+//                    }
+//                    val selector: SizeSelector = SizeSelectors.or(
+//                        SizeSelectors.and(SizeSelectors.aspectRatio(ratio, 0f),   SizeSelectors.biggest()),
+//                        SizeSelectors.and(SizeSelectors.aspectRatio(ratio, 0.02f), SizeSelectors.biggest()),
+//                        SizeSelectors.biggest()
+//                    )
+//
+//                    binding.camera.setPreviewStreamSize(selector)
+//                    binding.camera.setPictureSize(selector)
+//                    binding.camera.setVideoSize(selector)
 
-                    Toast.makeText(this, "Crop: ${item.title}", Toast.LENGTH_SHORT).show()
                 }
 
                 is TypeItems.ClockItem -> {
 
-                    Toast.makeText(this, "Clock: ${item.title}", Toast.LENGTH_SHORT).show()
                 }
 
                 is TypeItems.MenuItem -> {
 
-                    Toast.makeText(this, "Menu: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+
+                is TypeItems.FocusItem -> {
+
+                }
+
+                is TypeItems.GridItem -> {
+
                 }
             }
         }
@@ -132,9 +158,16 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this) {
             this@MainActivity.finish()
         }
-
         binding.apply {
 
+            overlay.setOnClickListener {
+                visibleRcvTools(false)
+                ivFlash.isSelected = false
+                ivCrop.isSelected = false
+                ivClock.isSelected = false
+                ivOptionMore.isSelected = false
+                toolsAdapter.clearData()
+            }
             // đổi camera
             ivChangeCamera.setSafeClickListener {
                 val current = camera.facing
@@ -205,33 +238,24 @@ class MainActivity : AppCompatActivity() {
             }
 
             ivFlash.setOnClickListener {
-                if (toolsAdapter.getDefaultItems() is TypeItems.FlashItem) {
-                    toolsAdapter.clearData()
-                    rcvTools.isVisible = false
-                } else {
-                    rcvTools.isVisible = true
-                    toolsAdapter.setDefaultItems(getFlashItems())
-                }
+                visibleRcvTools(true)
+                toolsAdapter.setDefaultItems(getFlashItems())
+                ivFlash.isSelected = true
             }
 
             ivCrop.setOnClickListener {
-                if (toolsAdapter.getDefaultItems() is TypeItems.CropItem) {
-                    toolsAdapter.clearData()
-                    rcvTools.isVisible = false
-                } else {
-                    rcvTools.isVisible = true
-                    toolsAdapter.setDefaultItems(getCropItems())
-                }
+                visibleRcvTools(true)
+                toolsAdapter.setDefaultItems(getCropItems())
+                ivCrop.isSelected = true
+
             }
 
             ivClock.setOnClickListener {
-                if (toolsAdapter.getDefaultItems() is TypeItems.ClockItem) {
-                    toolsAdapter.clearData()
-                    rcvTools.isVisible = false
-                } else {
-                    rcvTools.isVisible = true
-                    toolsAdapter.setDefaultItems(getClockItems())
-                }
+
+                visibleRcvTools(true)
+                toolsAdapter.setDefaultItems(getClockItems())
+                ivClock.isSelected = true
+
             }
 
             ivFilter.setOnClickListener {
@@ -244,14 +268,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             ivOptionMore.setOnClickListener {
-                if (toolsAdapter.getDefaultItems() is TypeItems.MenuItem) {
-                    toolsAdapter.clearData()
-                    rcvTools.isVisible = false
-                } else {
-                    rcvTools.isVisible = true
-                    toolsAdapter.setDefaultItems(getMenuItems())
-                }
+                visibleRcvTools(true)
+                toolsAdapter.setDefaultItems(getMenuItems())
+                ivOptionMore.isSelected = true
             }
+        }
+    }
+
+    private fun visibleRcvTools(isVisible: Boolean) {
+        binding.apply {
+            rcvTools.isVisible = isVisible
+            overlay.isVisible = isVisible
         }
     }
 

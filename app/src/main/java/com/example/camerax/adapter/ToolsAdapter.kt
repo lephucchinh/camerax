@@ -34,6 +34,8 @@ class ToolsAdapter(
         is TypeItems.CropItem -> CROP_ITEM
         is TypeItems.ClockItem -> CLOCK_ITEM
         is TypeItems.MenuItem -> MENU_ITEM
+        is TypeItems.FocusItem -> TODO()
+        is TypeItems.GridItem -> TODO()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -60,30 +62,33 @@ class ToolsAdapter(
 
             is TypeItems.CropItem -> (holder as CropViewHolder).bind(
                 item,
-                item.type == selectedCrop.name
+                item.type == selectedCrop
             ) {
-                selectedCrop = CropType.valueOf(item.type)
+                selectedCrop = item.type
                 notifyDataSetChanged()
                 onItemClick(item)
             }
 
             is TypeItems.ClockItem -> (holder as ClockViewHolder).bind(
                 item,
-                item.type == selectedClock.name
+                item.type == selectedClock
             ) {
-                selectedClock = ClockType.valueOf(item.type)
+                selectedClock = item.type
                 notifyDataSetChanged()
                 onItemClick(item)
             }
 
             is TypeItems.MenuItem -> (holder as MenuViewHolder).bind(
                 item,
-                item.type == selectedMenu.name
+                item.type == selectedMenu
             ) {
-                selectedMenu = MenuType.valueOf(item.type)
+                selectedMenu = item.type
                 notifyDataSetChanged()
                 onItemClick(item)
             }
+
+            is TypeItems.FocusItem -> TODO()
+            is TypeItems.GridItem -> TODO()
         }
     }
 
