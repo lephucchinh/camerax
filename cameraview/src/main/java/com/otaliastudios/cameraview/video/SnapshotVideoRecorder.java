@@ -245,7 +245,7 @@ public class SnapshotVideoRecorder extends VideoRecorder implements RendererFram
 
             // Adjustment
             mResult.rotation = 0; // We will rotate the result instead.
-            mCurrentFilter.setSize(mResult.size.getWidth(), mResult.size.getHeight());
+            mCurrentFilter.setSize(mResult.size.getWidth(), mResult.size.getWidth());
 
             // Audio
             AudioMediaEncoder audioEncoder = null;

@@ -2,9 +2,7 @@ package com.example.camerax
 
 import android.graphics.PointF
 import android.graphics.PorterDuff
-import android.graphics.Rect
 import android.os.Bundle
-import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -15,14 +13,19 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.camerax.adapter.ClockType
 import com.example.camerax.adapter.CropType
 import com.example.camerax.adapter.FilterAdapter
 import com.example.camerax.adapter.FlashType
+import com.example.camerax.adapter.FocusType
+import com.example.camerax.adapter.GridType
+import com.example.camerax.adapter.MenuType
 import com.example.camerax.adapter.ToolsAdapter
 import com.example.camerax.adapter.TypeItems
 import com.example.camerax.adapter.getClockItems
 import com.example.camerax.adapter.getCropItems
 import com.example.camerax.adapter.getFlashItems
+import com.example.camerax.adapter.getGridItems
 import com.example.camerax.adapter.getMenuItems
 import com.example.camerax.databinding.ActivityMainBinding
 import com.example.camerax.utils.SaveDataCamera
@@ -35,13 +38,16 @@ import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.VideoResult
 import com.otaliastudios.cameraview.controls.Facing
 import com.otaliastudios.cameraview.controls.Flash
+import com.otaliastudios.cameraview.controls.Grid
 import com.otaliastudios.cameraview.controls.Mode
 import com.otaliastudios.cameraview.controls.Preview
 import com.otaliastudios.cameraview.filter.Filters
 import com.otaliastudios.cameraview.filter.NoFilter
-import com.otaliastudios.cameraview.size.AspectRatio
-import com.otaliastudios.cameraview.size.SizeSelector
-import com.otaliastudios.cameraview.size.SizeSelectors
+import com.otaliastudios.cameraview.gesture.Gesture
+import com.otaliastudios.cameraview.gesture.GestureAction
+import com.otaliastudios.cameraview.markers.AutoFocusMarker
+import com.otaliastudios.cameraview.markers.DefaultAutoFocusMarker
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -57,6 +63,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var filterAdapter: FilterAdapter
 
     private lateinit var toolsAdapter: ToolsAdapter
+
+    private var captureDelay: Long = 0L
+
 
     val saveDataCamera = lazy { SaveDataCamera() }
 
@@ -76,7 +85,11 @@ class MainActivity : AppCompatActivity() {
         CameraLogger.setLogLevel(CameraLogger.LEVEL_VERBOSE)
         binding.camera.setLifecycleOwner(this)
         binding.camera.addCameraListener(Listener())
-
+        binding.camera.setAutoFocusMarker(
+            DefaultAutoFocusMarker()
+        )
+        binding.camera.mapGesture(Gesture.TAP, GestureAction.AUTO_FOCUS)
+        binding.camera.autoFocusResetDelay = 2000
 
         toolsAdapter = ToolsAdapter { item ->
             when (item) {
@@ -104,37 +117,104 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 is TypeItems.CropItem -> {
-//                    val ratio = when (item.type) {
-//                        CropType.CROP_1_1 -> AspectRatio.of(1, 1)
-//                        CropType.CROP_4_3 -> AspectRatio.of(4, 3)
-//                        CropType.CROP_16_9 -> AspectRatio.of(16, 9)
-//                    }
-//                    val selector: SizeSelector = SizeSelectors.or(
-//                        SizeSelectors.and(SizeSelectors.aspectRatio(ratio, 0f),   SizeSelectors.biggest()),
-//                        SizeSelectors.and(SizeSelectors.aspectRatio(ratio, 0.02f), SizeSelectors.biggest()),
-//                        SizeSelectors.biggest()
-//                    )
-//
-//                    binding.camera.setPreviewStreamSize(selector)
-//                    binding.camera.setPictureSize(selector)
-//                    binding.camera.setVideoSize(selector)
+
 
                 }
 
                 is TypeItems.ClockItem -> {
+                    when (item.type) {
+                        ClockType.OFF -> {
+                            captureDelay = 0
 
+                        }
+
+                        ClockType.TIME_3S -> {
+                            captureDelay = 3000L
+
+                        }
+
+                        ClockType.TIME_5S -> {
+                            captureDelay = 5000L
+
+                        }
+
+                        ClockType.TIME_9S -> {
+                            captureDelay = 9000L
+                        }
+                    }
                 }
 
                 is TypeItems.MenuItem -> {
+                    when (item.type) {
+                        MenuType.GRID -> {
+                            binding.ivMenu.setImageResource(R.drawable.ic_grid)
+                            toolsAdapter.setDefaultItems(getGridItems())
 
+                        }
+
+                        MenuType.EXPOSURE -> {
+                            binding.ivMenu.setImageResource(R.drawable.ic_exposure)
+
+
+                        }
+                    }
                 }
 
-                is TypeItems.FocusItem -> {
-
-                }
 
                 is TypeItems.GridItem -> {
+                    when (item.type) {
+                        GridType.NONE -> {
+                            binding.camera.grid = Grid.OFF
+                        }
 
+                        GridType.GIRD_3X3 -> {
+                            binding.camera.grid = Grid.DRAW_3X3
+                        }
+
+                        GridType.CROSS -> {
+                            binding.camera.grid = Grid.DRAW_CROSS
+
+                        }
+
+                        GridType.DIAGONAL -> {
+                            binding.camera.grid = Grid.DRAW_DIAGONAL
+
+                        }
+
+//                        GridType.GR_1 -> {
+//                            binding.camera.grid = Grid.DRAW_FIBONACCI
+//
+//                        }
+//
+//                        GridType.GR_2 -> {
+//
+//                        }
+//
+//                        GridType.GR_3 -> {
+//
+//                        }
+//
+//                        GridType.GR_4 -> {
+//
+//                        }
+
+                        GridType.GRID_PHI_3X3 -> {
+                            binding.camera.grid = Grid.DRAW_PHI
+                        }
+
+                        GridType.GRID_4X4 -> {
+                            binding.camera.grid = Grid.DRAW_4X4
+
+                        }
+
+//                        GridType.TRIANGLE_1 -> {
+//                            binding.camera.grid = Grid.DRAW_FIBONACCI
+//                        }
+//
+//                        GridType.TRIANGLE_2 -> {
+//
+//                        }
+                    }
                 }
             }
         }
@@ -165,7 +245,8 @@ class MainActivity : AppCompatActivity() {
                 ivFlash.isSelected = false
                 ivCrop.isSelected = false
                 ivClock.isSelected = false
-                ivOptionMore.isSelected = false
+                ivMenu.isSelected = false
+                ivMenu.setImageResource(R.drawable.ic_menu)
                 toolsAdapter.clearData()
             }
             // đổi camera
@@ -182,13 +263,35 @@ class MainActivity : AppCompatActivity() {
             // Chụp ảnh hoặc quay video
             ivTakePhoto.setSafeClickListener {
                 if (camera.mode == Mode.PICTURE) {
-                    // Nếu đang có filter (khác NONE) thì chụp snapshot để có filter
-                    if (camera.filter !is NoFilter) {
-                        camera.takePictureSnapshot()
+                    if (captureDelay > 0) {
+                        lifecycleScope.launch {
+                            val seconds = (captureDelay / 1000).toInt()
+                            for (i in seconds downTo 1) {
+                                binding.tvCountdown.text = "$i s"
+                                binding.tvCountdown.visibility = View.VISIBLE
+                                delay(1000)
+                            }
+                            binding.tvCountdown.visibility = View.GONE
+
+                            // Chụp
+                            if (camera.filter !is NoFilter) {
+                                camera.takePictureSnapshot()
+                            } else {
+                                camera.takePicture()
+                            }
+
+                            captureDelay = 0L // reset
+                        }
                     } else {
-                        camera.takePicture()
+                        // Chụp ngay
+                        if (camera.filter !is NoFilter) {
+                            camera.takePictureSnapshot()
+                        } else {
+                            camera.takePicture()
+                        }
                     }
                 } else {
+                    // Quay video như cũ
                     if (!isRecording) {
                         val videoFile = File(cacheDir, "video_${System.currentTimeMillis()}.mp4")
                         if (camera.filter is NoFilter) {
@@ -267,10 +370,10 @@ class MainActivity : AppCompatActivity() {
                 changeColorIvFilter()
             }
 
-            ivOptionMore.setOnClickListener {
+            ivMenu.setOnClickListener {
                 visibleRcvTools(true)
                 toolsAdapter.setDefaultItems(getMenuItems())
-                ivOptionMore.isSelected = true
+                ivMenu.isSelected = true
             }
         }
     }

@@ -131,7 +131,7 @@ public class CameraUtils {
 
     /**
      * Decodes an input byte array and outputs a Bitmap that is ready to be displayed.
-     * The difference with {@link android.graphics.BitmapFactory#decodeByteArray(byte[], int, int)}
+     * The difference with {@link BitmapFactory#decodeByteArray(byte[], int, int)}
      * is that this cares about orientation, reading it from the EXIF header.
      *
      * @param source a JPEG byte array
@@ -146,7 +146,7 @@ public class CameraUtils {
 
     /**
      * Decodes an input byte array and outputs a Bitmap that is ready to be displayed.
-     * The difference with {@link android.graphics.BitmapFactory#decodeByteArray(byte[], int, int)}
+     * The difference with {@link BitmapFactory#decodeByteArray(byte[], int, int)}
      * is that this cares about orientation, reading it from the EXIF header.
      * This is executed in a background thread, and returns the result to the original thread.
      *
@@ -161,7 +161,7 @@ public class CameraUtils {
 
     /**
      * Decodes an input byte array and outputs a Bitmap that is ready to be displayed.
-     * The difference with {@link android.graphics.BitmapFactory#decodeByteArray(byte[], int, int)}
+     * The difference with {@link BitmapFactory#decodeByteArray(byte[], int, int)}
      * is that this cares about orientation, reading it from the EXIF header.
      * This is executed in a background thread, and returns the result to the original thread.
      *
@@ -182,7 +182,7 @@ public class CameraUtils {
 
     /**
      * Decodes an input byte array and outputs a Bitmap that is ready to be displayed.
-     * The difference with {@link android.graphics.BitmapFactory#decodeByteArray(byte[], int, int)}
+     * The difference with {@link BitmapFactory#decodeByteArray(byte[], int, int)}
      * is that this cares about orientation, reading it from the EXIF header.
      * This is executed in a background thread, and returns the result to the original thread.
      *
@@ -226,7 +226,7 @@ public class CameraUtils {
 
     /**
      * Decodes an input byte array and outputs a Bitmap that is ready to be displayed.
-     * The difference with {@link android.graphics.BitmapFactory#decodeByteArray(byte[], int, int)}
+     * The difference with {@link BitmapFactory#decodeByteArray(byte[], int, int)}
      * is that this cares about orientation, reading it from the EXIF header.
      *
      * The image is also downscaled taking care of the maxWidth and maxHeight arguments.
@@ -245,7 +245,7 @@ public class CameraUtils {
 
     /**
      * Decodes an input byte array and outputs a Bitmap that is ready to be displayed.
-     * The difference with {@link android.graphics.BitmapFactory#decodeByteArray(byte[], int, int)}
+     * The difference with {@link BitmapFactory#decodeByteArray(byte[], int, int)}
      * is that this cares about orientation, reading it from the EXIF header.
      *
      * The image is also downscaled taking care of the maxWidth and maxHeight arguments.

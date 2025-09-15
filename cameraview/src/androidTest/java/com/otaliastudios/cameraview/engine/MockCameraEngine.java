@@ -37,7 +37,7 @@ public class MockCameraEngine extends CameraBaseEngine {
     public boolean mZoomChanged;
     public boolean mExposureCorrectionChanged;
 
-    public MockCameraEngine(CameraEngine.Callback callback) {
+    public MockCameraEngine(Callback callback) {
         super(callback);
     }
 

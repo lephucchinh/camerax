@@ -18,7 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 /**
- * A {@link VideoRecorder} that uses {@link android.media.MediaRecorder} APIs.
+ * A {@link VideoRecorder} that uses {@link MediaRecorder} APIs.
  *
  * When started, the media recorder will be prepared in
  * {@link #prepareMediaRecorder(VideoResult.Stub)}. This will call two abstract methods:

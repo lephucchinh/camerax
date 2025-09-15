@@ -24,9 +24,6 @@ sealed class TypeItems : Parcelable {
     data class GridItem(val title: String, val type: GridType) :
         TypeItems()
 
-    @Parcelize
-    data class FocusItem(@DrawableRes val image: Int, val type: FocusType) :
-        TypeItems()
 }
 
 enum class FlashType {
@@ -44,11 +41,11 @@ enum class ClockType {
 }
 
 enum class MenuType {
-    GRID, FOCUS, EXPOSURE
+    GRID, EXPOSURE
 }
 
 enum class GridType {
-    NONE, GIRD_3X3, GRID_PHI_3X3, GRID_4X4, CROSS, GR_1, GR_2, GR_3, GR_4, DIAGONAL, TRIANGLE_1, TRIANGLE_2
+    NONE, GIRD_3X3, GRID_PHI_3X3, GRID_4X4, CROSS, /*GR_1, GR_2, GR_3, GR_4,*/ DIAGONAL,/* TRIANGLE_1, TRIANGLE_2*/
 }
 
 enum class FocusType {
@@ -82,7 +79,6 @@ fun getClockItems(): List<TypeItems> {
 fun getMenuItems(): List<TypeItems> {
     return listOf(
         TypeItems.MenuItem(com.example.camerax.R.drawable.ic_grid, "Grid", MenuType.GRID),
-        TypeItems.MenuItem(com.example.camerax.R.drawable.ic_focus, "Focus", MenuType.FOCUS),
         TypeItems.MenuItem(
             com.example.camerax.R.drawable.ic_exposure,
             "Exposure",
@@ -98,21 +94,7 @@ fun getGridItems(): List<TypeItems> {
         TypeItems.GridItem("Phi 3x3", GridType.GRID_PHI_3X3),
         TypeItems.GridItem("4x4", GridType.GRID_4X4),
         TypeItems.GridItem("Cross", GridType.CROSS),
-        TypeItems.GridItem("GR 1", GridType.GR_1),
-        TypeItems.GridItem("GR 2", GridType.GR_2),
-        TypeItems.GridItem("GR 3", GridType.GR_3),
-        TypeItems.GridItem("GR 4", GridType.GR_4),
         TypeItems.GridItem("Diagonal", GridType.DIAGONAL),
-        TypeItems.GridItem("Triangle 1", GridType.TRIANGLE_1),
-        TypeItems.GridItem("Triangle 2", GridType.TRIANGLE_2)
     )
 }
 
-fun getFocusItems(): List<TypeItems> {
-    return listOf(
-        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_auto, FocusType.AUTO),
-        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_macro, FocusType.MACRO),
-        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_infinify, FocusType.INFINITY),
-        TypeItems.FocusItem(com.example.camerax.R.drawable.ic_focus_continuos, FocusType.CONTINUOUS)
-    )
-}

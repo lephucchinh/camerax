@@ -78,11 +78,7 @@ public class OverlayDrawer {
         }
         synchronized (mIssue514WorkaroundLock) {
             mIssue514Workaround.beforeOverlayUpdateTexImage();
-            try {
-                mSurfaceTexture.updateTexImage();
-            } catch (IllegalStateException e) {
-                LOG.w("Got IllegalStateException while updating texture contents", e);
-            }
+            mSurfaceTexture.updateTexImage();
         }
         mSurfaceTexture.getTransformMatrix(mTextureDrawer.getTextureTransform());
     }

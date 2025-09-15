@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.camerax.databinding.LayoutClockBinding
 import com.example.camerax.databinding.LayoutCropBinding
 import com.example.camerax.databinding.LayoutFlashBinding
+import com.example.camerax.databinding.LayoutGridBinding
 import com.example.camerax.databinding.LayoutMenuBinding
 
 class ToolsAdapter(
@@ -20,11 +21,16 @@ class ToolsAdapter(
     private var selectedClock: ClockType = ClockType.OFF
     private var selectedMenu: MenuType = MenuType.GRID
 
+    private var selectedGrid: GridType = GridType.NONE
+
+    private var selectedFocus: FocusType = FocusType.AUTO
+
     companion object {
         private const val FLASH_ITEM = 0
         private const val CROP_ITEM = 1
         private const val CLOCK_ITEM = 2
         private const val MENU_ITEM = 3
+        private const val GRID_ITEM = 4
     }
 
     override fun getItemCount(): Int = items.size
@@ -34,8 +40,7 @@ class ToolsAdapter(
         is TypeItems.CropItem -> CROP_ITEM
         is TypeItems.ClockItem -> CLOCK_ITEM
         is TypeItems.MenuItem -> MENU_ITEM
-        is TypeItems.FocusItem -> TODO()
-        is TypeItems.GridItem -> TODO()
+        is TypeItems.GridItem -> GRID_ITEM
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -45,6 +50,7 @@ class ToolsAdapter(
             CROP_ITEM -> CropViewHolder(LayoutCropBinding.inflate(inflater, parent, false))
             CLOCK_ITEM -> ClockViewHolder(LayoutClockBinding.inflate(inflater, parent, false))
             MENU_ITEM -> MenuViewHolder(LayoutMenuBinding.inflate(inflater, parent, false))
+            GRID_ITEM -> GridViewHolder(LayoutGridBinding.inflate(inflater, parent, false))
             else -> throw IllegalArgumentException("Invalid viewType")
         }
     }
@@ -87,8 +93,14 @@ class ToolsAdapter(
                 onItemClick(item)
             }
 
-            is TypeItems.FocusItem -> TODO()
-            is TypeItems.GridItem -> TODO()
+            is TypeItems.GridItem -> (holder as GridViewHolder).bind(
+                item,
+                item.type == selectedGrid
+            ) {
+                selectedGrid = item.type
+                notifyDataSetChanged()
+                onItemClick(item)
+            }
         }
     }
 
@@ -128,10 +140,21 @@ class ToolsAdapter(
                 ContextCompat.getDrawable(binding.root.context, item.image),
                 null, null, null
             )
+//            binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setOnClickListener { onClick() }
+        }
+    }
+
+    class GridViewHolder(private val binding: LayoutGridBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: TypeItems.GridItem, isSelected: Boolean, onClick: () -> Unit) {
+            binding.tvGrid.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
             binding.root.setOnClickListener { onClick() }
         }
     }
+
+
 
     fun setDefaultItems(newItems: List<TypeItems>) {
         items.clear()

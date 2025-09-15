@@ -39,16 +39,16 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_weight="1"
-            app:tint="@color/tools_tint_select"
-            android:src="@drawable/ic_crop" />
+            android:src="@drawable/ic_crop"
+            app:tint="@color/tools_tint_select" />
 
         <ImageView
             android:id="@+id/ivClock"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_weight="1"
-            app:tint="@color/tools_tint_select"
-            android:src="@drawable/ic_clock" />
+            android:src="@drawable/ic_clock"
+            app:tint="@color/tools_tint_select" />
 
         <ImageView
             android:id="@+id/ivFilter"
@@ -58,12 +58,12 @@
             android:src="@drawable/ic_filter" />
 
         <ImageView
-            android:id="@+id/ivOptionMore"
+            android:id="@+id/ivMenu"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_weight="1"
-            app:tint="@color/tools_tint_select"
-            android:src="@drawable/ic_menu" />
+            android:src="@drawable/ic_menu"
+            app:tint="@color/tools_tint_select" />
     </LinearLayout>
 
     <!-- CameraView -->
@@ -71,9 +71,10 @@
         android:id="@+id/camera"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:focusable="true"
         android:keepScreenOn="true"
         app:cameraAudio="on"
-        app:cameraEngine="camera2"
+        app:cameraEngine="camera1"
         app:cameraExperimental="true"
         app:cameraFacing="back"
         app:cameraFlash="auto"
@@ -87,11 +88,13 @@
         app:cameraPreview="glSurface"
         app:layout_constraintBottom_toTopOf="@+id/ads"
         app:layout_constraintEnd_toEndOf="parent"
+        app:cameraPictureSizeAspectRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bgTool" />
 
 
     <LinearLayout
+        android:id="@+id/llTakePhoto"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -145,7 +148,7 @@
         android:id="@+id/ivPhotoPreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scaleType="fitXY"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="@+id/camera"
         app:layout_constraintEnd_toEndOf="@+id/camera"
         app:layout_constraintStart_toStartOf="@+id/camera"
@@ -188,6 +191,18 @@
         app:layout_constraintTop_toTopOf="@+id/ads"
         tools:itemCount="10"
         tools:listitem="@layout/layout_filter" />
+
+    <TextView
+        android:id="@+id/tvCountdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:layout_marginBottom="15dp"
+        app:layout_constraintBottom_toTopOf="@+id/llTakePhoto"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="number" />
 
     <View
         android:id="@+id/overlay"

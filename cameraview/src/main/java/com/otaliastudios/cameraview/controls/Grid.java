@@ -33,7 +33,24 @@ public enum Grid implements Control {
      * Draws a grid respecting the 'phi' constant proportions,
      * often referred as to the golden ratio.
      */
-    DRAW_PHI(3);
+    DRAW_PHI(3),
+
+
+    /**
+     * Draws a simple cross (+).
+     */
+    DRAW_CROSS(4),
+
+    /**
+     * Draws a diagonal cross (×).
+     */
+    DRAW_DIAGONAL(5),
+
+    /**
+     * Draws Fibonacci spiral (4 orientations).
+     */
+    DRAW_FIBONACCI(6);
+
 
     static final Grid DEFAULT = OFF;
 

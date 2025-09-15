@@ -3,6 +3,8 @@ package com.otaliastudios.cameraview.internal;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 
 import androidx.annotation.ColorInt;
@@ -29,6 +31,9 @@ public class GridLinesLayout extends View {
 
     private ColorDrawable horiz;
     private ColorDrawable vert;
+
+    private Paint linePaint;
+
     private final float width;
 
     interface DrawCallback {
@@ -99,6 +104,9 @@ public class GridLinesLayout extends View {
             case DRAW_3X3: return 2;
             case DRAW_PHI: return 2;
             case DRAW_4X4: return 3;
+            case DRAW_CROSS: return 1;     // 1 đường ngang + 1 đường dọc
+            case DRAW_DIAGONAL: return 1;  // 2 đường chéo
+            case DRAW_FIBONACCI: return -1; // special case
         }
         return 0;
     }
@@ -119,22 +127,103 @@ public class GridLinesLayout extends View {
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-        int count = getLineCount();
-        for (int n = 0; n < count; n++) {
-            float pos = getLinePosition(n);
 
-            // Draw horizontal line
-            canvas.translate(0, pos * getHeight());
-            horiz.draw(canvas);
-            canvas.translate(0, - pos * getHeight());
+        if (gridMode == Grid.DRAW_CROSS) {
+            // Vẽ dấu cộng: đường giữa ngang và dọc
+            float midX = getWidth() / 2f;
+            float midY = getHeight() / 2f;
 
-            // Draw vertical line
-            canvas.translate(pos * getWidth(), 0);
-            vert.draw(canvas);
-            canvas.translate(- pos * getWidth(), 0);
+            // Horizontal
+            canvas.drawLine(0, midY, getWidth(), midY, getPaint());
+            // Vertical
+            canvas.drawLine(midX, 0, midX, getHeight(), getPaint());
+
+        } else if (gridMode == Grid.DRAW_DIAGONAL) {
+            // Vẽ dấu nhân (×)
+            canvas.drawLine(0, 0, getWidth(), getHeight(), getPaint());
+            canvas.drawLine(getWidth(), 0, 0, getHeight(), getPaint());
+
+        } else if (gridMode == Grid.DRAW_FIBONACCI) {
+            // Vẽ Fibonacci spiral bằng cung tròn (quarter arcs)
+            drawFibonacci(canvas);
+
+        } else {
+            // Giữ logic cũ cho 3x3, 4x4, phi
+            int count = getLineCount();
+            for (int n = 0; n < count; n++) {
+                float pos = getLinePosition(n);
+
+                // Horizontal
+                canvas.translate(0, pos * getHeight());
+                horiz.draw(canvas);
+                canvas.translate(0, - pos * getHeight());
+
+                // Vertical
+                canvas.translate(pos * getWidth(), 0);
+                vert.draw(canvas);
+                canvas.translate(- pos * getWidth(), 0);
+            }
+            if (callback != null) {
+                callback.onDraw(count);
+            }
         }
-        if (callback != null) {
-            callback.onDraw(count);
+    }
+
+    private void drawFibonacci(Canvas canvas) {
+        int w = getWidth();
+        int h = getHeight();
+        int min = Math.min(w, h);
+
+        // Một số Fibonacci để vẽ (có thể mở rộng thêm)
+        int[] fib = {1, 1, 2, 3, 5, 8, 13};
+
+        // Tính scale sao cho vừa màn hình
+        float scale = (float) min / fib[fib.length - 1];
+
+        // Điểm bắt đầu
+        float x = (w - min) / 2f;
+        float y = (h - min) / 2f;
+
+        int dir = 0; // 0: phải, 1: xuống, 2: trái, 3: lên
+        for (int i = 0; i < fib.length; i++) {
+            float size = fib[i] * scale;
+            RectF rect;
+
+            switch (dir) {
+                case 0: // phải
+                    rect = new RectF(x, y, x + size, y + size);
+                    canvas.drawArc(rect, 90, 90, false, getPaint());
+                    x += size;
+                    break;
+                case 1: // xuống
+                    rect = new RectF(x - size, y, x, y + size);
+                    canvas.drawArc(rect, 0, 90, false, getPaint());
+                    y += size;
+                    break;
+                case 2: // trái
+                    rect = new RectF(x - size, y - size, x, y);
+                    canvas.drawArc(rect, 270, 90, false, getPaint());
+                    x -= size;
+                    break;
+                case 3: // lên
+                    rect = new RectF(x, y - size, x + size, y);
+                    canvas.drawArc(rect, 180, 90, false, getPaint());
+                    y -= size;
+                    break;
+            }
+            dir = (dir + 1) % 4;
         }
+    }
+
+
+
+    private Paint getPaint() {
+        if (linePaint == null) {
+            linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            linePaint.setStyle(Paint.Style.STROKE);
+            linePaint.setStrokeWidth(width);
+            linePaint.setColor(gridColor);
+        }
+        return linePaint;
     }
 }

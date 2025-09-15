@@ -17,7 +17,7 @@ import java.util.Map;
 import androidx.annotation.NonNull;
 
 /**
- * Wraps the {@link android.media.CamcorderProfile} static utilities.
+ * Wraps the {@link CamcorderProfile} static utilities.
  */
 public class CamcorderProfiles {
 
