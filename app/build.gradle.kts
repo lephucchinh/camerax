@@ -48,6 +48,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(project(":cameraview"))
 
+    implementation("com.h6ah4i.android.widget.verticalseekbar:verticalseekbar:1.0.0")
+
 //    val camerax_version = "1.5.0"
 //    implementation("androidx.camera:camera-core:${camerax_version}")
 //    implementation("androidx.camera:camera-camera2:${camerax_version}")

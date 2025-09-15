@@ -84,11 +84,11 @@
         app:cameraGestureScrollVertical="exposureCorrection"
         app:cameraGrid="off"
         app:cameraMode="picture"
+        app:cameraPictureSizeAspectRatio="1:1"
         app:cameraPlaySounds="true"
         app:cameraPreview="glSurface"
         app:layout_constraintBottom_toTopOf="@+id/ads"
         app:layout_constraintEnd_toEndOf="parent"
-        app:cameraPictureSizeAspectRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bgTool" />
 
@@ -192,13 +192,32 @@
         tools:itemCount="10"
         tools:listitem="@layout/layout_filter" />
 
+    <com.h6ah4i.android.widget.verticalseekbar.VerticalSeekBarWrapper
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:rotation="180"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/camera"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/camera">
+
+        <com.h6ah4i.android.widget.verticalseekbar.VerticalSeekBar
+            android:id="@+id/seekExposure"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:max="100"
+            android:progress="50" />
+    </com.h6ah4i.android.widget.verticalseekbar.VerticalSeekBarWrapper>
+
+
+
     <TextView
         android:id="@+id/tvCountdown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textColor="@color/white"
         android:layout_marginBottom="15dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
         app:layout_constraintBottom_toTopOf="@+id/llTakePhoto"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

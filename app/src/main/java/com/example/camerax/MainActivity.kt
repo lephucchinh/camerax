@@ -4,6 +4,7 @@ import android.graphics.PointF
 import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.View
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.addCallback
 
@@ -421,6 +422,27 @@ class MainActivity : AppCompatActivity() {
 
     private inner class Listener : CameraListener() {
         override fun onCameraOpened(options: CameraOptions) {
+            super.onCameraOpened(options)
+
+            val min = options.exposureCorrectionMinValue
+            val max = options.exposureCorrectionMaxValue
+
+            // Mapping: 0..100 -> min..max
+            binding.seekExposure.max = 100
+            binding.seekExposure.progress = 50 // 0 EV ở giữa
+
+            binding.seekExposure.setOnSeekBarChangeListener(
+                object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        val fraction = progress / 100f
+                        val value = min + (max - min) * fraction
+                        binding.camera.exposureCorrection = value
+                    }
+
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                }
+            )
         }
 
         override fun onCameraError(exception: CameraException) {
