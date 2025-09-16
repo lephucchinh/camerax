@@ -9,6 +9,8 @@ import com.example.camerax.databinding.LayoutCropBinding
 import com.example.camerax.databinding.LayoutFlashBinding
 import com.example.camerax.databinding.LayoutGridBinding
 import com.example.camerax.databinding.LayoutMenuBinding
+import com.example.camerax.databinding.LayoutPhotographyBinding
+import com.example.camerax.databinding.LayoutResolutionBinding
 import com.otaliastudios.cameraview.R
 
 class ToolsAdapter(
@@ -26,12 +28,21 @@ class ToolsAdapter(
 
     private var selectedFocus: FocusType = FocusType.AUTO
 
+    private var selectedResolution: ResolutionType = ResolutionType.TYPE_720P
+
+    private var selectedPhotography: PhotographyType = PhotographyType.OFF
+
+
     companion object {
         private const val FLASH_ITEM = 0
         private const val CROP_ITEM = 1
         private const val CLOCK_ITEM = 2
         private const val MENU_ITEM = 3
         private const val GRID_ITEM = 4
+
+        private const val RESOLUTION_ITEM = 5
+
+        private const val PHOTOGRAPHY_ITEM = 6
     }
 
     override fun getItemCount(): Int = items.size
@@ -42,6 +53,8 @@ class ToolsAdapter(
         is TypeItems.ClockItem -> CLOCK_ITEM
         is TypeItems.MenuItem -> MENU_ITEM
         is TypeItems.GridItem -> GRID_ITEM
+        is TypeItems.PhotographyItem -> PHOTOGRAPHY_ITEM
+        is TypeItems.ResolutionItem -> RESOLUTION_ITEM
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -52,6 +65,22 @@ class ToolsAdapter(
             CLOCK_ITEM -> ClockViewHolder(LayoutClockBinding.inflate(inflater, parent, false))
             MENU_ITEM -> MenuViewHolder(LayoutMenuBinding.inflate(inflater, parent, false))
             GRID_ITEM -> GridViewHolder(LayoutGridBinding.inflate(inflater, parent, false))
+            RESOLUTION_ITEM -> ResolutionViewHolder(
+                LayoutResolutionBinding.inflate(
+                    inflater,
+                    parent,
+                    false
+                )
+            )
+
+            PHOTOGRAPHY_ITEM -> PhotographyViewHolder(
+                LayoutPhotographyBinding.inflate(
+                    inflater,
+                    parent,
+                    false
+                )
+            )
+
             else -> throw IllegalArgumentException("Invalid viewType")
         }
     }
@@ -102,6 +131,24 @@ class ToolsAdapter(
                 notifyDataSetChanged()
                 onItemClick(item)
             }
+
+            is TypeItems.PhotographyItem -> (holder as PhotographyViewHolder).bind(
+                item,
+                item.type == selectedPhotography
+            ) {
+                selectedPhotography = item.type
+                notifyDataSetChanged()
+                onItemClick(item)
+            }
+
+            is TypeItems.ResolutionItem -> (holder as ResolutionViewHolder).bind(
+                item,
+                item.type == selectedResolution
+            ) {
+                selectedResolution = item.type
+                notifyDataSetChanged()
+                onItemClick(item)
+            }
         }
     }
 
@@ -112,7 +159,10 @@ class ToolsAdapter(
             binding.ivFlash.setImageResource(item.image)
             binding.root.alpha = if (isSelected) 1f else 0.5f
             binding.root.setBackgroundColor(
-                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black
+                )
             )
             binding.root.setOnClickListener { onClick() }
         }
@@ -124,7 +174,10 @@ class ToolsAdapter(
             binding.tvCrop.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
             binding.root.setBackgroundColor(
-                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black
+                )
             )
             binding.root.setOnClickListener { onClick() }
         }
@@ -136,7 +189,10 @@ class ToolsAdapter(
             binding.tvClock.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
             binding.root.setBackgroundColor(
-                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black
+                )
             )
             binding.root.setOnClickListener { onClick() }
         }
@@ -161,12 +217,45 @@ class ToolsAdapter(
             binding.tvGrid.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
             binding.root.setBackgroundColor(
-                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black
+                )
             )
             binding.root.setOnClickListener { onClick() }
         }
     }
 
+    class ResolutionViewHolder(private val binding: LayoutResolutionBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: TypeItems.ResolutionItem, isSelected: Boolean, onClick: () -> Unit) {
+            binding.tvResolution.text = item.title
+            binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black
+                )
+            )
+            binding.root.setOnClickListener { onClick() }
+        }
+    }
+
+
+    class PhotographyViewHolder(private val binding: LayoutPhotographyBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: TypeItems.PhotographyItem, isSelected: Boolean, onClick: () -> Unit) {
+            binding.tvPhotography.text = item.title
+            binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black
+                )
+            )
+            binding.root.setOnClickListener { onClick() }
+        }
+    }
 
 
     fun setDefaultItems(newItems: List<TypeItems>) {

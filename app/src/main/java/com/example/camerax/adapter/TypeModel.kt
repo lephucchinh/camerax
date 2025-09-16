@@ -24,6 +24,12 @@ sealed class TypeItems : Parcelable {
     data class GridItem(val title: String, val type: GridType) :
         TypeItems()
 
+    @Parcelize
+    data class ResolutionItem(val title: String, val type: ResolutionType) : TypeItems()
+
+    @Parcelize
+    data class PhotographyItem(val title: String, val type: PhotographyType) : TypeItems()
+
 }
 
 enum class FlashType {
@@ -49,8 +55,17 @@ enum class GridType {
 }
 
 enum class FocusType {
-    AUTO, MACRO,INFINITY,CONTINUOUS
+    AUTO, MACRO, INFINITY, CONTINUOUS
 }
+
+enum class ResolutionType {
+    TYPE_720P, TYPE_1080P, TYPE_4K
+}
+
+enum class PhotographyType {
+    ON, OFF
+}
+
 fun getFlashItems(): List<TypeItems> {
     return listOf(
         TypeItems.FlashItem(com.example.camerax.R.drawable.ic_flash_off, FlashType.OFF),
@@ -95,6 +110,21 @@ fun getGridItems(): List<TypeItems> {
         TypeItems.GridItem("4x4", GridType.GRID_4X4),
         TypeItems.GridItem("Cross", GridType.CROSS),
         TypeItems.GridItem("Diagonal", GridType.DIAGONAL),
+    )
+}
+
+fun getResolutionItems(): List<TypeItems> {
+    return listOf(
+        TypeItems.ResolutionItem("720p", ResolutionType.TYPE_720P),
+        TypeItems.ResolutionItem("1080p", ResolutionType.TYPE_1080P),
+        TypeItems.ResolutionItem("4K", ResolutionType.TYPE_4K),
+    )
+}
+
+fun getPhotographyItems(): List<TypeItems> {
+    return listOf(
+        TypeItems.PhotographyItem("On", PhotographyType.ON),
+        TypeItems.PhotographyItem("Off", PhotographyType.OFF),
     )
 }
 

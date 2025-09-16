@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,6 +23,8 @@ import com.example.camerax.adapter.FlashType
 import com.example.camerax.adapter.FocusType
 import com.example.camerax.adapter.GridType
 import com.example.camerax.adapter.MenuType
+import com.example.camerax.adapter.PhotographyType
+import com.example.camerax.adapter.ResolutionType
 import com.example.camerax.adapter.ToolsAdapter
 import com.example.camerax.adapter.TypeItems
 import com.example.camerax.adapter.getClockItems
@@ -29,6 +32,8 @@ import com.example.camerax.adapter.getCropItems
 import com.example.camerax.adapter.getFlashItems
 import com.example.camerax.adapter.getGridItems
 import com.example.camerax.adapter.getMenuItems
+import com.example.camerax.adapter.getPhotographyItems
+import com.example.camerax.adapter.getResolutionItems
 import com.example.camerax.databinding.ActivityMainBinding
 import com.example.camerax.utils.SaveDataCamera
 import com.example.camerax.utils.cropToRatio
@@ -52,6 +57,7 @@ import com.otaliastudios.cameraview.markers.AutoFocusMarker
 import com.otaliastudios.cameraview.markers.DefaultAutoFocusMarker
 import com.otaliastudios.cameraview.size.AspectRatio
 import com.otaliastudios.cameraview.size.SizeSelectors
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -71,7 +77,10 @@ class MainActivity : AppCompatActivity() {
 
     private var captureDelay: Long = 0L
 
-    private var currentCropType : CropType = CropType.CROP_1_1
+    private var currentCropType: CropType = CropType.CROP_1_1
+
+    private var recordJob: Job? = null
+
 
 
     val saveDataCamera = lazy { SaveDataCamera() }
@@ -128,7 +137,12 @@ class MainActivity : AppCompatActivity() {
                         CropType.CROP_1_1 -> {
                             binding.camera.apply {
                                 currentCropType = CropType.CROP_1_1
-                                setPictureSize(SizeSelectors.aspectRatio(AspectRatio.of(1, 1), 0.1f))
+                                setPictureSize(
+                                    SizeSelectors.aspectRatio(
+                                        AspectRatio.of(1, 1),
+                                        0.1f
+                                    )
+                                )
                                 val params = layoutParams as ConstraintLayout.LayoutParams
                                 params.dimensionRatio = "W,1:1"
                                 layoutParams = params
@@ -138,7 +152,12 @@ class MainActivity : AppCompatActivity() {
                         CropType.CROP_4_3 -> {
                             binding.camera.apply {
                                 currentCropType = CropType.CROP_4_3
-                                setPictureSize(SizeSelectors.aspectRatio(AspectRatio.of(4, 3), 0.1f))
+                                setPictureSize(
+                                    SizeSelectors.aspectRatio(
+                                        AspectRatio.of(4, 3),
+                                        0.1f
+                                    )
+                                )
                                 val params = layoutParams as ConstraintLayout.LayoutParams
                                 params.dimensionRatio = "W,4:3"
                                 layoutParams = params
@@ -148,7 +167,12 @@ class MainActivity : AppCompatActivity() {
                         CropType.CROP_16_9 -> {
                             binding.camera.apply {
                                 currentCropType = CropType.CROP_16_9
-                                setPictureSize(SizeSelectors.aspectRatio(AspectRatio.of(16, 9), 0.1f))
+                                setPictureSize(
+                                    SizeSelectors.aspectRatio(
+                                        AspectRatio.of(16, 9),
+                                        0.1f
+                                    )
+                                )
                                 val params = layoutParams as ConstraintLayout.LayoutParams
                                 params.dimensionRatio = "W,16:9"
                                 layoutParams = params
@@ -192,6 +216,7 @@ class MainActivity : AppCompatActivity() {
                         MenuType.EXPOSURE -> {
                             binding.ivMenu.setImageResource(R.drawable.ic_exposure)
 
+                            binding.seekExposure.isVisible = true
 
                         }
                     }
@@ -253,6 +278,49 @@ class MainActivity : AppCompatActivity() {
 //                        }
                     }
                 }
+
+                is TypeItems.PhotographyItem -> {
+                    when (item.type) {
+                        PhotographyType.OFF -> {
+
+                        }
+
+                        PhotographyType.ON -> {
+                        }
+
+                    }
+                }
+
+                is TypeItems.ResolutionItem -> {
+                    val selector = when (item.type) {
+                        ResolutionType.TYPE_720P -> {
+                            SizeSelectors.and(
+                                SizeSelectors.aspectRatio(AspectRatio.of(16, 9), 0f),  // chuẩn 16:9
+                                SizeSelectors.biggest(),                               // lấy size lớn nhất có cùng tỉ lệ
+                                SizeSelectors.maxWidth(1280)                           // không vượt quá 720p
+                            )
+                        }
+
+                        ResolutionType.TYPE_1080P -> {
+                            SizeSelectors.and(
+                                SizeSelectors.aspectRatio(AspectRatio.of(16, 9), 0f),
+                                SizeSelectors.biggest(),
+                                SizeSelectors.maxWidth(1920)
+                            )
+                        }
+
+                        ResolutionType.TYPE_4K -> {
+                            SizeSelectors.and(
+                                SizeSelectors.aspectRatio(AspectRatio.of(16, 9), 0f),
+                                SizeSelectors.biggest(),
+                                SizeSelectors.maxWidth(3840)
+                            )
+                        }
+                    }
+
+                    binding.camera.setVideoSize(selector)
+                }
+
             }
         }
 
@@ -283,6 +351,9 @@ class MainActivity : AppCompatActivity() {
                 ivCrop.isSelected = false
                 ivClock.isSelected = false
                 ivMenu.isSelected = false
+                ivResolution.isSelected = false
+                ivPhotography.isSelected = false
+                seekExposure.isVisible = false
                 ivMenu.setImageResource(R.drawable.ic_menu)
                 toolsAdapter.clearData()
             }
@@ -329,7 +400,8 @@ class MainActivity : AppCompatActivity() {
 
                 } else {
                     if (!isRecording) {
-                        val videoFile = File(cacheDir, "video_${System.currentTimeMillis()}.mp4")
+                        val videoFile =
+                            File(cacheDir, "video_${System.currentTimeMillis()}.mp4")
                         if (camera.filter is NoFilter) {
                             camera.takeVideo(videoFile)
                         } else {
@@ -349,10 +421,12 @@ class MainActivity : AppCompatActivity() {
                 camera.mode = if (current == Mode.PICTURE) {
                     ivTakePhoto.setImageResource(R.drawable.ic_video_recording)
                     ivChangeMode.setImageResource(R.drawable.ic_take_photo)
+                    checkShowToolsInModeVideo(true)
                     Mode.VIDEO
                 } else {
                     ivTakePhoto.setImageResource(R.drawable.ic_take_photo)
                     ivChangeMode.setImageResource(R.drawable.ic_video_recording)
+                    checkShowToolsInModeVideo(false)
                     Mode.PICTURE
                 }
 
@@ -395,6 +469,18 @@ class MainActivity : AppCompatActivity() {
                 toolsAdapter.setDefaultItems(getClockItems())
                 ivClock.isSelected = true
 
+            }
+
+            ivResolution.setOnClickListener {
+                visibleRcvTools(true)
+                toolsAdapter.setDefaultItems(getResolutionItems())
+                ivResolution.isSelected = true
+            }
+
+            ivPhotography.setOnClickListener {
+                visibleRcvTools(true)
+                toolsAdapter.setDefaultItems(getPhotographyItems())
+                ivPhotography.isSelected = true
             }
 
             ivFilter.setOnClickListener {
@@ -470,7 +556,9 @@ class MainActivity : AppCompatActivity() {
                     minExposure + (progress.toFloat() / steps) * (maxExposure - minExposure)
                 // hiển thị khi đang kéo
                 binding.tvCountdown.text = String.format("%.1f", exposureValue)
-                binding.tvCountdown.visibility = View.VISIBLE
+                if (fromUser) {
+                    binding.tvCountdown.visibility = View.VISIBLE
+                }
 
                 // áp dụng cho CameraView
                 binding.camera.exposureCorrection = exposureValue
@@ -478,7 +566,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 // hiện text khi bắt đầu kéo
-                binding.tvCountdown.visibility = View.VISIBLE
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -488,7 +575,19 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
     private fun setupObserver() {}
+
+    private fun checkShowToolsInModeVideo(isVideoMode: Boolean) {
+        binding.apply {
+            ivFilter.isVisible = isVideoMode.not()
+            ivClock.isVisible = isVideoMode.not()
+            ivCrop.isVisible = isVideoMode.not()
+
+            ivResolution.isVisible = isVideoMode
+            ivPhotography.isVisible = isVideoMode
+        }
+    }
 
 
     private fun stopRecordingIfNeeded() {
@@ -544,7 +643,6 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
         override fun onVideoTaken(result: VideoResult) {
             super.onVideoTaken(result)
             lifecycleScope.launch {
@@ -560,15 +658,48 @@ class MainActivity : AppCompatActivity() {
 
         override fun onVideoRecordingStart() {
             super.onVideoRecordingStart()
-            binding.ivTakePhoto.setImageResource(R.drawable.ic_video_stop)
+            binding.apply {
+                ivTakePhoto.setImageResource(R.drawable.ic_video_stop)
+                ivGallery.isInvisible = true
+                ivChangeMode.isInvisible = true
+                ivChangeCamera.isInvisible = true
+                ivSetting.isInvisible = true
+
+                tvCountdown.visibility = View.VISIBLE  // TextView hiển thị thời gian
+                tvCountdown.text = "00:00"
+            }
             isRecording = true
+
+            // Bắt đầu đếm
+            recordJob = lifecycleScope.launch {
+                var seconds = 0
+                while (isRecording) {
+                    val minutes = seconds / 60
+                    val secs = seconds % 60
+                    binding.tvCountdown.text = String.format("%02d:%02d", minutes, secs)
+                    delay(1000)
+                    seconds++
+                }
+            }
         }
 
         override fun onVideoRecordingEnd() {
             super.onVideoRecordingEnd()
-            binding.ivTakePhoto.setImageResource(R.drawable.ic_video_recording)
+            binding.apply {
+                ivTakePhoto.setImageResource(R.drawable.ic_video_recording)
+                ivGallery.isInvisible = false
+                ivChangeMode.isInvisible = false
+                ivChangeCamera.isInvisible = false
+                ivSetting.isInvisible = false
+
+                tvCountdown.visibility = View.GONE
+            }
             isRecording = false
+
+            // Dừng job countdown
+            recordJob?.cancel()
         }
+
 
         override fun onExposureCorrectionChanged(
             newValue: Float,
@@ -578,7 +709,11 @@ class MainActivity : AppCompatActivity() {
             super.onExposureCorrectionChanged(newValue, bounds, fingers)
         }
 
-        override fun onZoomChanged(newValue: Float, bounds: FloatArray, fingers: Array<PointF>?) {
+        override fun onZoomChanged(
+            newValue: Float,
+            bounds: FloatArray,
+            fingers: Array<PointF>?
+        ) {
             super.onZoomChanged(newValue, bounds, fingers)
         }
     }
