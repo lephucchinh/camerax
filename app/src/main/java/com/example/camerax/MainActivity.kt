@@ -266,6 +266,7 @@ class MainActivity : AppCompatActivity() {
                 if (camera.mode == Mode.PICTURE) {
                     if (captureDelay > 0) {
                         lifecycleScope.launch {
+                            binding.overlay.visibility = View.VISIBLE
                             val seconds = (captureDelay / 1000).toInt()
                             for (i in seconds downTo 1) {
                                 binding.tvCountdown.text = "$i s"
@@ -273,26 +274,17 @@ class MainActivity : AppCompatActivity() {
                                 delay(1000)
                             }
                             binding.tvCountdown.visibility = View.GONE
-
-                            // Chụp
                             if (camera.filter !is NoFilter) {
                                 camera.takePictureSnapshot()
                             } else {
                                 camera.takePicture()
                             }
-
-                            captureDelay = 0L // reset
-                        }
-                    } else {
-                        // Chụp ngay
-                        if (camera.filter !is NoFilter) {
-                            camera.takePictureSnapshot()
-                        } else {
-                            camera.takePicture()
+                            binding.overlay.visibility = View.GONE
+                            captureDelay = 0L
                         }
                     }
+
                 } else {
-                    // Quay video như cũ
                     if (!isRecording) {
                         val videoFile = File(cacheDir, "video_${System.currentTimeMillis()}.mp4")
                         if (camera.filter is NoFilter) {
@@ -431,18 +423,37 @@ class MainActivity : AppCompatActivity() {
             binding.seekExposure.max = 100
             binding.seekExposure.progress = 50 // 0 EV ở giữa
 
-            binding.seekExposure.setOnSeekBarChangeListener(
-                object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                        val fraction = progress / 100f
-                        val value = min + (max - min) * fraction
-                        binding.camera.exposureCorrection = value
-                    }
+            val minExposure = -3f
+            val maxExposure = 3f
+            val steps = 60  // tức là 0.1f mỗi nấc
 
-                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            binding.seekExposure.max = steps
+            binding.seekExposure.progress = steps / 2   // về 0.0 ở giữa
+
+            binding.seekExposure.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    val exposureValue = minExposure + (progress.toFloat() / steps) * (maxExposure - minExposure)
+                    // hiển thị khi đang kéo
+                    binding.tvCountdown.text = String.format("%.1f", exposureValue)
+                    binding.tvCountdown.visibility = View.VISIBLE
+
+                    // áp dụng cho CameraView
+                    binding.camera.exposureCorrection = exposureValue
                 }
-            )
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                    // hiện text khi bắt đầu kéo
+                    binding.tvCountdown.visibility = View.VISIBLE
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    // ẩn hoặc clear text khi dừng kéo
+                    binding.tvCountdown.visibility = View.GONE
+                    // hoặc: binding.tvCountdown.text = ""
+                }
+            })
+
+
         }
 
         override fun onCameraError(exception: CameraException) {
