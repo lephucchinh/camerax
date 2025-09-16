@@ -9,6 +9,7 @@ import com.example.camerax.databinding.LayoutCropBinding
 import com.example.camerax.databinding.LayoutFlashBinding
 import com.example.camerax.databinding.LayoutGridBinding
 import com.example.camerax.databinding.LayoutMenuBinding
+import com.otaliastudios.cameraview.R
 
 class ToolsAdapter(
     private val onItemClick: (TypeItems) -> Unit
@@ -110,6 +111,9 @@ class ToolsAdapter(
         fun bind(item: TypeItems.FlashItem, isSelected: Boolean, onClick: () -> Unit) {
             binding.ivFlash.setImageResource(item.image)
             binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+            )
             binding.root.setOnClickListener { onClick() }
         }
     }
@@ -119,6 +123,9 @@ class ToolsAdapter(
         fun bind(item: TypeItems.CropItem, isSelected: Boolean, onClick: () -> Unit) {
             binding.tvCrop.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+            )
             binding.root.setOnClickListener { onClick() }
         }
     }
@@ -128,6 +135,9 @@ class ToolsAdapter(
         fun bind(item: TypeItems.ClockItem, isSelected: Boolean, onClick: () -> Unit) {
             binding.tvClock.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+            )
             binding.root.setOnClickListener { onClick() }
         }
     }
@@ -150,6 +160,9 @@ class ToolsAdapter(
         fun bind(item: TypeItems.GridItem, isSelected: Boolean, onClick: () -> Unit) {
             binding.tvGrid.text = item.title
             binding.root.alpha = if (isSelected) 1f else 0.5f
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(binding.root.context, if (isSelected) com.example.camerax.R.color.blue else com.example.camerax.R.color.black)
+            )
             binding.root.setOnClickListener { onClick() }
         }
     }

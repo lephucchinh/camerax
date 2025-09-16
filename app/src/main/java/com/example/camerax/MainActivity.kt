@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
@@ -30,6 +31,7 @@ import com.example.camerax.adapter.getGridItems
 import com.example.camerax.adapter.getMenuItems
 import com.example.camerax.databinding.ActivityMainBinding
 import com.example.camerax.utils.SaveDataCamera
+import com.example.camerax.utils.cropToRatio
 import com.example.camerax.utils.setSafeClickListener
 import com.otaliastudios.cameraview.CameraException
 import com.otaliastudios.cameraview.CameraListener
@@ -48,6 +50,8 @@ import com.otaliastudios.cameraview.gesture.Gesture
 import com.otaliastudios.cameraview.gesture.GestureAction
 import com.otaliastudios.cameraview.markers.AutoFocusMarker
 import com.otaliastudios.cameraview.markers.DefaultAutoFocusMarker
+import com.otaliastudios.cameraview.size.AspectRatio
+import com.otaliastudios.cameraview.size.SizeSelectors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -66,6 +70,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toolsAdapter: ToolsAdapter
 
     private var captureDelay: Long = 0L
+
+    private var currentCropType : CropType = CropType.CROP_1_1
 
 
     val saveDataCamera = lazy { SaveDataCamera() }
@@ -118,7 +124,37 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 is TypeItems.CropItem -> {
+                    when (item.type) {
+                        CropType.CROP_1_1 -> {
+                            binding.camera.apply {
+                                currentCropType = CropType.CROP_1_1
+                                setPictureSize(SizeSelectors.aspectRatio(AspectRatio.of(1, 1), 0.1f))
+                                val params = layoutParams as ConstraintLayout.LayoutParams
+                                params.dimensionRatio = "W,1:1"
+                                layoutParams = params
+                            }
+                        }
 
+                        CropType.CROP_4_3 -> {
+                            binding.camera.apply {
+                                currentCropType = CropType.CROP_4_3
+                                setPictureSize(SizeSelectors.aspectRatio(AspectRatio.of(4, 3), 0.1f))
+                                val params = layoutParams as ConstraintLayout.LayoutParams
+                                params.dimensionRatio = "W,4:3"
+                                layoutParams = params
+                            }
+                        }
+
+                        CropType.CROP_16_9 -> {
+                            binding.camera.apply {
+                                currentCropType = CropType.CROP_16_9
+                                setPictureSize(SizeSelectors.aspectRatio(AspectRatio.of(16, 9), 0.1f))
+                                val params = layoutParams as ConstraintLayout.LayoutParams
+                                params.dimensionRatio = "W,16:9"
+                                layoutParams = params
+                            }
+                        }
+                    }
 
                 }
 
@@ -282,6 +318,13 @@ class MainActivity : AppCompatActivity() {
                             binding.overlay.visibility = View.GONE
                             captureDelay = 0L
                         }
+                    } else {
+                        // ✅ Chụp ngay lập tức
+                        if (camera.filter !is NoFilter) {
+                            camera.takePictureSnapshot()
+                        } else {
+                            camera.takePicture()
+                        }
                     }
 
                 } else {
@@ -401,6 +444,50 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun onSetupSeekbar() {
+//        val min = options.exposureCorrectionMinValue
+//        val max = options.exposureCorrectionMaxValue
+
+        // Mapping: 0..100 -> min..max
+        binding.seekExposure.max = 100
+        binding.seekExposure.progress = 50 // 0 EV ở giữa
+
+        val minExposure = -3f
+        val maxExposure = 3f
+        val steps = 60
+
+        binding.seekExposure.max = steps
+        binding.seekExposure.progress = steps / 2   // về 0.0 ở giữa
+
+        binding.seekExposure.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(
+                seekBar: SeekBar?,
+                progress: Int,
+                fromUser: Boolean
+            ) {
+                val exposureValue =
+                    minExposure + (progress.toFloat() / steps) * (maxExposure - minExposure)
+                // hiển thị khi đang kéo
+                binding.tvCountdown.text = String.format("%.1f", exposureValue)
+                binding.tvCountdown.visibility = View.VISIBLE
+
+                // áp dụng cho CameraView
+                binding.camera.exposureCorrection = exposureValue
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                // hiện text khi bắt đầu kéo
+                binding.tvCountdown.visibility = View.VISIBLE
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                // ẩn hoặc clear text khi dừng kéo
+                binding.tvCountdown.visibility = View.GONE
+                // hoặc: binding.tvCountdown.text = ""
+            }
+        })
+    }
     private fun setupObserver() {}
 
 
@@ -415,43 +502,7 @@ class MainActivity : AppCompatActivity() {
     private inner class Listener : CameraListener() {
         override fun onCameraOpened(options: CameraOptions) {
             super.onCameraOpened(options)
-
-            val min = options.exposureCorrectionMinValue
-            val max = options.exposureCorrectionMaxValue
-
-            // Mapping: 0..100 -> min..max
-            binding.seekExposure.max = 100
-            binding.seekExposure.progress = 50 // 0 EV ở giữa
-
-            val minExposure = -3f
-            val maxExposure = 3f
-            val steps = 60  // tức là 0.1f mỗi nấc
-
-            binding.seekExposure.max = steps
-            binding.seekExposure.progress = steps / 2   // về 0.0 ở giữa
-
-            binding.seekExposure.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val exposureValue = minExposure + (progress.toFloat() / steps) * (maxExposure - minExposure)
-                    // hiển thị khi đang kéo
-                    binding.tvCountdown.text = String.format("%.1f", exposureValue)
-                    binding.tvCountdown.visibility = View.VISIBLE
-
-                    // áp dụng cho CameraView
-                    binding.camera.exposureCorrection = exposureValue
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                    // hiện text khi bắt đầu kéo
-                    binding.tvCountdown.visibility = View.VISIBLE
-                }
-
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                    // ẩn hoặc clear text khi dừng kéo
-                    binding.tvCountdown.visibility = View.GONE
-                    // hoặc: binding.tvCountdown.text = ""
-                }
-            })
+            onSetupSeekbar()
 
 
         }
@@ -463,24 +514,36 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPictureTaken(result: PictureResult) {
             super.onPictureTaken(result)
-            lifecycleScope.launch {
-                val savePhotoSuccess = saveDataCamera.value.savePhoto(this@MainActivity, result)
-
-                if (savePhotoSuccess) {
-                    // Ảnh đã lưu → dùng chính bitmap từ savePhoto trả về (hoặc tự decode 1 lần)
-                    result.toBitmap { bitmap ->
-                        if (bitmap != null) {
-                            binding.ivPhotoPreview.setImageBitmap(bitmap)
-                            binding.grPhotoPreview.visibility = View.VISIBLE
-                        }
+            result.toBitmap { bitmap ->
+                if (bitmap != null) {
+                    // Crop theo tỷ lệ đã chọn
+                    val cropped = when (currentCropType) {
+                        CropType.CROP_1_1 -> bitmap.cropToRatio(1, 1)
+                        CropType.CROP_4_3 -> bitmap.cropToRatio(3, 4)
+                        CropType.CROP_16_9 -> bitmap.cropToRatio(9, 16)
+                        else -> bitmap
                     }
-                    Toast.makeText(this@MainActivity, "Photo saved!", Toast.LENGTH_SHORT).show()
+
+                    // Hiển thị preview
+                    binding.ivPhotoPreview.setImageBitmap(cropped)
+                    binding.grPhotoPreview.visibility = View.VISIBLE
+
+                    // Lưu ảnh crop
+                    lifecycleScope.launch {
+                        val saved = saveDataCamera.value.savePhoto(this@MainActivity, cropped)
+                        Toast.makeText(
+                            this@MainActivity,
+                            if (saved) "Photo saved!" else "Save failed!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 } else {
-                    Toast.makeText(this@MainActivity, "Save photo failed!", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this@MainActivity, "Bitmap null!", Toast.LENGTH_SHORT).show()
                 }
             }
         }
+
+
 
         override fun onVideoTaken(result: VideoResult) {
             super.onVideoTaken(result)

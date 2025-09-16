@@ -18,68 +18,62 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 
 class SaveDataCamera() {
 
-    suspend fun savePhoto(context: Context, result: PictureResult): Boolean {
-        val bitmap = withContext(Dispatchers.Main) {
-            // toBitmap phải chạy trên UI thread
-            suspendCancellableCoroutine<Bitmap?> { cont ->
-                result.toBitmap { bmp ->
-                    cont.resume(bmp, onCancellation = null)
+    suspend fun savePhoto(context: Context, bitmap: Bitmap): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ dùng MediaStore
+                val contentValues = ContentValues().apply {
+                    put(
+                        MediaStore.MediaColumns.DISPLAY_NAME,
+                        "photo_${System.currentTimeMillis()}.jpg"
+                    )
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MyCameraApp")
                 }
-            }
-        }
 
-        if (bitmap == null) return false
+                val resolver = context.contentResolver
+                val uri = resolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    contentValues
+                ) ?: return false
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, "photo_${System.currentTimeMillis()}.jpg")
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MyCameraApp")
-            }
-
-            val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-            if (uri != null) {
                 withContext(Dispatchers.IO) {
                     resolver.openOutputStream(uri)?.use { outStream ->
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outStream)
                     }
-                    contentValues.clear()
-                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    resolver.update(uri, contentValues, null, null)
                 }
                 true
             } else {
-                false
-            }
-        } else {
-            val picturesDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES
-            )
-            if (!picturesDir.exists()) picturesDir.mkdirs()
+                // Android 9 trở xuống: lưu trực tiếp vào Pictures
+                val picturesDir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES
+                )
+                if (!picturesDir.exists()) picturesDir.mkdirs()
 
-            val file = File(picturesDir, "photo_${System.currentTimeMillis()}.jpg")
-
-            withContext(Dispatchers.IO) {
-                suspendCancellableCoroutine<Boolean> { cont ->
-                    result.toFile(file) { savedFile ->
-                        if (savedFile != null) {
-                            val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-                            intent.data = Uri.fromFile(savedFile)
-                            context.sendBroadcast(intent)
-                            cont.resume(true, onCancellation = null)
-                        } else {
-                            cont.resume(false, onCancellation = null)
-                        }
+                val file = File(picturesDir, "photo_${System.currentTimeMillis()}.jpg")
+                withContext(Dispatchers.IO) {
+                    FileOutputStream(file).use { outStream ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outStream)
                     }
                 }
+
+                // Quét file để hiện trong Gallery
+                val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                intent.data = Uri.fromFile(file)
+                context.sendBroadcast(intent)
+
+                true
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
+
 
 
 
