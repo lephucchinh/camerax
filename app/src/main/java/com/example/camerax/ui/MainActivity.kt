@@ -1,5 +1,8 @@
-package com.example.camerax
+package com.example.camerax.ui
 
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.PorterDuff
 import android.os.Bundle
@@ -7,7 +10,7 @@ import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.addCallback
-
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -16,11 +19,11 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.camerax.R
 import com.example.camerax.adapter.ClockType
 import com.example.camerax.adapter.CropType
 import com.example.camerax.adapter.FilterAdapter
 import com.example.camerax.adapter.FlashType
-import com.example.camerax.adapter.FocusType
 import com.example.camerax.adapter.GridType
 import com.example.camerax.adapter.MenuType
 import com.example.camerax.adapter.PhotographyType
@@ -35,6 +38,8 @@ import com.example.camerax.adapter.getMenuItems
 import com.example.camerax.adapter.getPhotographyItems
 import com.example.camerax.adapter.getResolutionItems
 import com.example.camerax.databinding.ActivityMainBinding
+import com.example.camerax.ui.SettingActivity.Companion.MIRROR_MODE
+import com.example.camerax.ui.SettingActivity.Companion.ZOOM_MODE
 import com.example.camerax.utils.SaveDataCamera
 import com.example.camerax.utils.cropToRatio
 import com.example.camerax.utils.setSafeClickListener
@@ -42,6 +47,7 @@ import com.otaliastudios.cameraview.CameraException
 import com.otaliastudios.cameraview.CameraListener
 import com.otaliastudios.cameraview.CameraLogger
 import com.otaliastudios.cameraview.CameraOptions
+import com.otaliastudios.cameraview.CameraView
 import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.VideoResult
 import com.otaliastudios.cameraview.controls.Facing
@@ -53,7 +59,6 @@ import com.otaliastudios.cameraview.filter.Filters
 import com.otaliastudios.cameraview.filter.NoFilter
 import com.otaliastudios.cameraview.gesture.Gesture
 import com.otaliastudios.cameraview.gesture.GestureAction
-import com.otaliastudios.cameraview.markers.AutoFocusMarker
 import com.otaliastudios.cameraview.markers.DefaultAutoFocusMarker
 import com.otaliastudios.cameraview.size.AspectRatio
 import com.otaliastudios.cameraview.size.SizeSelectors
@@ -79,11 +84,28 @@ class MainActivity : AppCompatActivity() {
 
     private var currentCropType: CropType = CropType.CROP_1_1
 
+    private var isMirrorMode = true
+
     private var recordJob: Job? = null
 
 
-
     val saveDataCamera = lazy { SaveDataCamera() }
+
+    private val openSettingLaunch =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val data = result.data
+                val zoomMode = data?.getBooleanExtra(ZOOM_MODE, true)
+                val mirrorMode = data?.getBooleanExtra(MIRROR_MODE, false)
+
+                isMirrorMode = mirrorMode == true
+                binding.camera.mapGesture(
+                    Gesture.PINCH,
+                    if (zoomMode == true) GestureAction.ZOOM else GestureAction.NONE
+                )
+                // xử lý dữ liệu trả về
+            }
+        }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,6 +118,21 @@ class MainActivity : AppCompatActivity() {
         setupListener() // <- sau đó mới gán cho RecyclerView
         setupData()
     }
+
+    private fun setCameraRatio(ratio: String, aspect: AspectRatio) {
+        binding.camera.apply {
+            // cập nhật ảnh chụp đúng tỉ lệ
+            setPictureSize(SizeSelectors.aspectRatio(aspect, 0f))
+
+            // reset lại layout params trước khi set dimensionRatio
+            val params = layoutParams as ConstraintLayout.LayoutParams
+            params.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+            params.height = 0  // để chiều cao co giãn theo dimensionRatio
+            params.dimensionRatio = ratio
+            layoutParams = params
+        }
+    }
+
 
     private fun setupUI() {
         CameraLogger.setLogLevel(CameraLogger.LEVEL_VERBOSE)
@@ -134,51 +171,11 @@ class MainActivity : AppCompatActivity() {
 
                 is TypeItems.CropItem -> {
                     when (item.type) {
-                        CropType.CROP_1_1 -> {
-                            binding.camera.apply {
-                                currentCropType = CropType.CROP_1_1
-                                setPictureSize(
-                                    SizeSelectors.aspectRatio(
-                                        AspectRatio.of(1, 1),
-                                        0.1f
-                                    )
-                                )
-                                val params = layoutParams as ConstraintLayout.LayoutParams
-                                params.dimensionRatio = "W,1:1"
-                                layoutParams = params
-                            }
-                        }
-
-                        CropType.CROP_4_3 -> {
-                            binding.camera.apply {
-                                currentCropType = CropType.CROP_4_3
-                                setPictureSize(
-                                    SizeSelectors.aspectRatio(
-                                        AspectRatio.of(4, 3),
-                                        0.1f
-                                    )
-                                )
-                                val params = layoutParams as ConstraintLayout.LayoutParams
-                                params.dimensionRatio = "W,4:3"
-                                layoutParams = params
-                            }
-                        }
-
-                        CropType.CROP_16_9 -> {
-                            binding.camera.apply {
-                                currentCropType = CropType.CROP_16_9
-                                setPictureSize(
-                                    SizeSelectors.aspectRatio(
-                                        AspectRatio.of(16, 9),
-                                        0.1f
-                                    )
-                                )
-                                val params = layoutParams as ConstraintLayout.LayoutParams
-                                params.dimensionRatio = "W,16:9"
-                                layoutParams = params
-                            }
-                        }
+                        CropType.CROP_1_1 -> setCameraRatio("W,1:1", AspectRatio.of(1, 1))
+                        CropType.CROP_4_3 -> setCameraRatio("W,4:3", AspectRatio.of(4, 3))
+                        CropType.CROP_16_9 -> setCameraRatio("W,16:9", AspectRatio.of(16, 9))
                     }
+
 
                 }
 
@@ -337,7 +334,10 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun setupData() {}
+    private fun setupData() {
+        binding.camera.scaleX = 1f
+    }
+
     private fun setupListener() {
 
         onBackPressedDispatcher.addCallback(this) {
@@ -381,21 +381,21 @@ class MainActivity : AppCompatActivity() {
                                 delay(1000)
                             }
                             binding.tvCountdown.visibility = View.GONE
-                            if (camera.filter !is NoFilter) {
-                                camera.takePictureSnapshot()
-                            } else {
-                                camera.takePicture()
-                            }
+//                            if (!isMirrorMode) {
+                            camera.takePictureSnapshot()
+//                            } else {
+//                                camera.takePicture()
+//                            }
                             binding.overlay.visibility = View.GONE
                             captureDelay = 0L
                         }
                     } else {
                         // ✅ Chụp ngay lập tức
-                        if (camera.filter !is NoFilter) {
-                            camera.takePictureSnapshot()
-                        } else {
-                            camera.takePicture()
-                        }
+//                        if (!isMirrorMode) {
+                        camera.takePictureSnapshot()
+//                        } else {
+//                            camera.takePicture()
+//                        }
                     }
 
                 } else {
@@ -496,6 +496,23 @@ class MainActivity : AppCompatActivity() {
                 visibleRcvTools(true)
                 toolsAdapter.setDefaultItems(getMenuItems())
                 ivMenu.isSelected = true
+            }
+
+            ivSetting.setOnClickListener {
+                val intent = Intent(this@MainActivity, SettingActivity::class.java).apply {
+                    putExtra(
+                        ZOOM_MODE,
+                        binding.camera.getGestureAction(Gesture.PINCH) == GestureAction.ZOOM
+                    )
+                    putExtra(
+                        MIRROR_MODE, isMirrorMode
+                    )
+                }
+
+                openSettingLaunch.launch(
+                    intent
+                )
+
             }
         }
     }
@@ -598,6 +615,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun flipBitmap(src: Bitmap): Bitmap {
+        val matrix = Matrix().apply {
+            preScale(-1f, 1f) // lật ngang
+        }
+        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+    }
+
     private inner class Listener : CameraListener() {
         override fun onCameraOpened(options: CameraOptions) {
             super.onCameraOpened(options)
@@ -624,7 +648,11 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     // Hiển thị preview
-                    binding.ivPhotoPreview.setImageBitmap(cropped)
+                    binding.ivPhotoPreview.setImageBitmap(
+                        if (isMirrorMode) cropped else flipBitmap(
+                            cropped
+                        )
+                    )
                     binding.grPhotoPreview.visibility = View.VISIBLE
 
                     // Lưu ảnh crop
@@ -720,5 +748,3 @@ class MainActivity : AppCompatActivity() {
 
 
 }
-
-
