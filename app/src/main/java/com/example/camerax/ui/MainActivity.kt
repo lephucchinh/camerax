@@ -171,9 +171,9 @@ class MainActivity : AppCompatActivity() {
 
                 is TypeItems.CropItem -> {
                     when (item.type) {
-                        CropType.CROP_1_1 -> setCameraRatio("W,1:1", AspectRatio.of(1, 1))
-                        CropType.CROP_4_3 -> setCameraRatio("W,4:3", AspectRatio.of(4, 3))
-                        CropType.CROP_16_9 -> setCameraRatio("W,16:9", AspectRatio.of(16, 9))
+                        CropType.CROP_1_1 -> setCameraRatio("H,1:1", AspectRatio.of(1, 1))
+                        CropType.CROP_4_3 -> setCameraRatio("H,3:4", AspectRatio.of(4, 3))
+                        CropType.CROP_16_9 -> setCameraRatio("H,9:16", AspectRatio.of(16, 9))
                     }
 
 
