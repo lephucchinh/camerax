@@ -1,13 +1,18 @@
 package com.example.camerax.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.EditText
+import android.widget.LinearLayout
 import androidx.activity.addCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.camerax.databinding.ActivitySettingBinding
+import com.example.camerax.utils.SaveDataCamera.Companion.folderName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -52,6 +57,29 @@ class SettingActivity : AppCompatActivity() {
         }
     }
 
+    fun showInputDialog(context: Context, onOk: (String) -> Unit) {
+        val editText = EditText(context).apply {
+            hint = "Nhập tên folder"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        AlertDialog.Builder(context)
+            .setTitle("Nhập tên folder")
+            .setView(editText)
+            .setPositiveButton("OK") { dialog, _ ->
+                val text = editText.text.toString()
+                onOk(text)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Hủy") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
     private fun setupListener() {
         onBackPressedDispatcher.addCallback(this) {
             setResult(RESULT_OK, resultIntent)
@@ -71,7 +99,9 @@ class SettingActivity : AppCompatActivity() {
                 resultIntent.putExtra(MIRROR_MODE, mirrorMode.value)
             }
             vSaveLocal.setOnClickListener {
-
+                showInputDialog(this@SettingActivity) {
+                    folderName = it
+                }
             }
         }
 

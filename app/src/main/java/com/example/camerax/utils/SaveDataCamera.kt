@@ -22,6 +22,10 @@ import java.io.FileOutputStream
 
 class SaveDataCamera() {
 
+    companion object {
+        var folderName = "MyCameraApp"
+    }
+
     suspend fun savePhoto(context: Context, bitmap: Bitmap): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -32,7 +36,7 @@ class SaveDataCamera() {
                         "photo_${System.currentTimeMillis()}.jpg"
                     )
                     put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MyCameraApp")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/$folderName")
                 }
 
                 val resolver = context.contentResolver
@@ -56,7 +60,7 @@ class SaveDataCamera() {
 
                 val file = File(picturesDir, "photo_${System.currentTimeMillis()}.jpg")
                 withContext(Dispatchers.IO) {
-                    FileOutputStream(file).use { outStream ->
+                     FileOutputStream(file).use { outStream ->
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 95, outStream)
                     }
                 }
@@ -86,7 +90,7 @@ class SaveDataCamera() {
                     val values = ContentValues().apply {
                         put(MediaStore.MediaColumns.DISPLAY_NAME, "video_${System.currentTimeMillis()}.mp4")
                         put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-                        put(MediaStore.MediaColumns.RELATIVE_PATH, "Movies/MyCameraApp")
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, "Movies/$folderName")
                         put(MediaStore.MediaColumns.IS_PENDING, 1) // đánh dấu đang ghi
                     }
 
